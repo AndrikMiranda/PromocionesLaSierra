@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //obetener inventario entero
 $app -> get('/api/inventarioP', function(Request $request, Response $response){
-$app->render('inventario.php');
+
   $consulta = "select articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
@@ -134,6 +134,26 @@ $app -> post('/api/inventarioP/agregarnuevo', function(Request $request, Respons
 $FkArticulo = $request -> getParam('FkArticulo');
 $cantidad = $request -> getParam('CantidadPrincipal');
 
+$consulta1 = "SELECT CantidadPrincipal FROM inventarioprincipal
+WHERE FkArticulo = $FkArticulo";
+
+try {
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta1);
+    $inventario = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+
+} catch (PDOException $e) {
+  echo '{"error": {"text": '.$e -> getMessage().'}';
+}
+
+$consulta = "UPDATE  inventarioprincipal SET CantidadPrincipal =
+:CantidadPrincipal WHERE IdInventarioP = $id";
+
+if ($inventario >= 1) {
+
   $consulta = "INSERT INTO inventarioprincipal(FkArticulo, CantidadPrincipal)
   values (:FkArticulo, :CantidadPrincipal)";
 
@@ -152,20 +172,91 @@ $cantidad = $request -> getParam('CantidadPrincipal');
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
+} else {
+  echo '{"notice": {"text": "Producto ya existente en el inventario"}';
+}
+});
+
+//Editar la cantidad de productos por id
+$app -> put('/api/inventarioP/actualizarcantidad/{IdInventarioP}', function(Request $request, Response $response){
+
+  $id = $request -> getAttribute('IdInventarioP');
+  $cantidad = $request -> getParam('CantidadPrincipal');
+
+  $consulta = "UPDATE  inventarioprincipal SET CantidadPrincipal =
+  :CantidadPrincipal WHERE IdInventarioP = $id";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $stmt = $db -> prepare($consulta);
+      $stmt -> bindParam(':CantidadPrincipal', $cantidad);
+      $stmt -> execute();
+      echo '{"notice": {"text": "Inventario actualizado"}';
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
 
 });
 
-//Aumentar la cantidad de productos por producto
-$app -> put('/api/inventarioP/actualizarcantidad/{FkArticulo}', function(Request $request, Response $response){
+//Editar la cantidad de productos por id
+$app -> put('/api/inventarioP/actualizarcantidadart/{FkArticulo}', function(Request $request, Response $response){
 
-  $FkArticulo = $request -> getAttribute('FkArticulo');
+  $articulo = $request -> getAttribute('FkArticulo');
   $cantidad = $request -> getParam('CantidadPrincipal');
 
+  $consulta = "UPDATE  inventarioprincipal SET CantidadPrincipal =
+  :CantidadPrincipal WHERE FkArticulo = $articulo";
 
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $stmt = $db -> prepare($consulta);
+      $stmt -> bindParam(':CantidadPrincipal', $cantidad);
+      $stmt -> execute();
+      echo '{"notice": {"text": "Inventario actualizado"}';
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
+
+});
+
+//Editar la cantidad de productos por id
+$app -> put('/api/inventarioP/aumentarcantidad/{IdInventarioP}', function(Request $request, Response $response){
+
+  $id = $request -> getAttribute('IdInventarioP');
+  $cantidad = $request -> getParam('CantidadPrincipal');
+
+  $consulta1 = "SELECT CantidadPrincipal FROM inventarioprincipal
+  WHERE IdInventarioP = $id";
+
+  try {
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consulta1);
+      $inventario = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+      //Exportar y mostrar JSON
+      echo json_encode($inventario);
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
 
   $consulta = "UPDATE  inventarioprincipal SET CantidadPrincipal =
-  :CantidadPrincipal WHERE FkArticulo = $FkArticulo";
+  :CantidadPrincipal WHERE IdInventarioP = $id";
 
+  if ($inventario >= $cantidad) {
+    echo '{"notice": {"text": "Inventario actualizado"}';
+  }
   try {
 
     //Instanciacion de base de datos

@@ -12,7 +12,7 @@ $app = new \Slim\App;
 require '../src/rutas/usuario.php';
 require '../src/rutas/inventarioP.php';
 require '../src/rutas/inventarioS.php';
-require '../src/templates/inventario.php';
+require '../src/rutas/tipomovimiento.php';
 
 $app->run();
 
