@@ -7,7 +7,6 @@ require '../vendor/autoload.php';
 
 $app = new \Slim\App;
 
-
 //rutas
 require '../src/rutas/usuario.php';
 require '../src/rutas/inventarioP.php';
