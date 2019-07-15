@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 //--------------------------------OBETENER INVENTARIO COMPLETO
 $app -> get('/api/inventarioS', function(Request $request, Response $response){
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventariosecundario.IdInventarioS, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
   inventariosecundario.IdInventarioS, inventariosecundario.CantidadSecundario
@@ -39,7 +39,7 @@ $app -> get('/api/inventarioS/categoria/{NombreCategoria}', function(Request $re
 
   $categoria = $request -> getAttribute('NombreCategoria');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventariosecundario.IdInventarioS, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
   inventariosecundario.IdInventarioS, inventariosecundario.CantidadSecundario
@@ -74,7 +74,7 @@ $app -> get('/api/inventarioS/articulo/{NombreArticulo}', function(Request $requ
 
   $articulo = $request -> getAttribute('NombreArticulo');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventariosecundario.IdInventarioS, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
   inventariosecundario.IdInventarioS, inventariosecundario.CantidadSecundario
@@ -107,7 +107,7 @@ $app -> get('/api/inventarioS/codigo/{Codigo}', function(Request $request, Respo
 
   $codigo = $request -> getAttribute('Codigo');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventariosecundario.IdInventarioS, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
   inventariosecundario.IdInventarioS, inventariosecundario.CantidadSecundario

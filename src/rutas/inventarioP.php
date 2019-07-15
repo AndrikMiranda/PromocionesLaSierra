@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 //--------------------------------OBETENER INVENTARIO COMPLETO
 $app -> get('/api/inventarioP', function(Request $request, Response $response){
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
 from inventarioprincipal
@@ -37,7 +37,7 @@ $app -> get('/api/inventarioP/categoria/{NombreCategoria}', function(Request $re
 
   $categoria = $request -> getAttribute('NombreCategoria');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
 from inventarioprincipal
@@ -69,7 +69,7 @@ $app -> get('/api/inventarioP/articulo/{NombreArticulo}', function(Request $requ
 
   $articulo = $request -> getAttribute('NombreArticulo');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
 from inventarioprincipal
@@ -100,7 +100,7 @@ $app -> get('/api/inventarioP/codigo/{Codigo}', function(Request $request, Respo
 
   $codigo = $request -> getAttribute('Codigo');
 
-  $consulta = "select articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
 from inventarioprincipal

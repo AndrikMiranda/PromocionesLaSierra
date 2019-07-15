@@ -9,6 +9,7 @@ $app = new \Slim\App;
 
 
 //rutas
+require '../src/rutas/reportes.php';
 require '../src/rutas/usuario.php';
 require '../src/rutas/inventarioP.php';
 require '../src/rutas/inventarioS.php';

@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 //--------------------------------OBETENER INVENTARIO COMPLETO
 $app -> get('/api/inventarioD', function(Request $request, Response $response){
 
-  $consulta = "SELECT inventariodevolucion.FkDevolucion, devolucion.FkVenta, venta.FkSubVenta,
+  $consulta = "SELECT inventariodevolucion.IdInventarioD, inventariodevolucion.FkDevolucion, devolucion.FkVenta, venta.FkSubVenta,
   devolucion.EstadoArticulo, subventa.FkArticulo, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo, cat_categoriaarticulos.NombreCategoria
   FROM inventariodevolucion
