@@ -25,6 +25,8 @@ require '../src/rutas/catLio.php';
 require '../src/rutas/catMotivo.php';
 require '../src/rutas/catTipoUsuario.php';
 require '../src/rutas/ruta.php';
+require '../src/rutas/RepListaNegra.php';
+require '../src/rutas/RepSaldoPendiente.php';
 
 
 $app->run();
