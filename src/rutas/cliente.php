@@ -47,15 +47,14 @@ $app -> post('/api/cliente/agregar', function(Request $request, Response $respon
 $nombre = $request -> getParam('Nombre');
 $APaterno = $request -> getParam('APaterno');
 $AMaterno = $request -> getParam('AMaterno');
-$tel
-$cel
-$sexo
-$casa
-$auto
-$lugarTrabajo
-$telTrabajo
-$antiguedad
-$
+$tel;
+$cel;
+$sexo;
+$casa;
+$auto;
+$lugarTrabajo;
+$telTrabajo;
+$antiguedad;
 
 $tipoU = $request -> getParam('FkCat_TipoUsuario');
 
