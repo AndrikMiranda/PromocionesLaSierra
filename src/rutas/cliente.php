@@ -2,25 +2,43 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-$app = new \Slim\App;
+//$app = new \Slim\App;
 
-//obetener cliente
-$app -> get('/api/cliente/{Nombre}', function(Request $request, Response $response){
+//obetener todoscliente
+$app -> get('/api/clientes', function(Request $request, Response $response){
 
-$nombre = $request -> getAttribute('Nombre');
-
-  $consulta = "select cliente.Nombre, cliente.APaterno, cliente.AMaterno, cliente.Telefono,
-  cliente.Celular, cliente.Sexo, cliente.CasaPropia, cliente.AutoPropio, cliente.LugarTrabajo,
-  cliente.TelTrabajo, cliente.Antiguedad, cat_estado.NomEstado, cat_municipio.NomMunicipio,
-  cat_colonia.NomColonia, cat_colonia.CP, cat_calle.NomCalle, cat_calle.Tipo, direccion.NumExterior,
-  direccion.NumInterior, cliente.Estatus
-from cliente
-inner join direccion on cliente.FkDireccion = direccion.IdDireccion
-inner join cat_estado on direccion.FkEstado = cat_estado.IdEstado
-inner join cat_municipio on direccion.FkMunicipio = cat_municipio.IdMunicipio
-inner join cat_colonia on direccion.FkColonia = cat_colonia.IdColonia
-inner join cat_calle on direccion.FkCalle = cat_calle.IdCalle
-WHERE Nombre = '$nombre';";
+  $consulta = "SELECT
+  `cliente`.`IdCliente`,
+  `cliente`.`Nombre`,
+  `cliente`.`APaterno`,
+  `cliente`.`AMaterno`,
+  `cliente`.`FechaNacimiento`,
+  `cliente`.`Sexo`,
+  `cliente`.`Telefono`,
+  `cliente`.`Celular`,
+  `cliente`.`CasaPropia`,
+  `cliente`.`AutoPropio`,
+  `cliente`.`LugarTrabajo`,
+  `cliente`.`TelTrabajo`,
+  `cliente`.`Antiguedad`,
+  `cliente`.`Estatus`,
+  `cat_calle`.`NomCalle`,
+  `direccion`.`NumExterior`,
+  `direccion`.`NumInterior`,
+  `cat_colonia`.`NomColonia`,
+  `cat_colonia`.`CP`,
+  `cat_municipio`.`NomMunicipio`,
+  `cat_estado`.`NomEstado`
+FROM
+  `cliente`
+  INNER JOIN `direccion` ON `direccion`.`IdDireccion` = `cliente`.`FkDireccion`
+    AND `direccion`.`IdDireccion` = `cliente`.`FkDireccionCobro`
+  INNER JOIN `cat_estado` ON `cat_estado`.`IdEstado` = `direccion`.`FkEstado`
+  INNER JOIN `cat_municipio` ON `cat_municipio`.`IdMunicipio` =
+    `direccion`.`FkMunicipio`
+  INNER JOIN `cat_colonia` ON `cat_colonia`.`IdColonia` =
+    `direccion`.`FkColonia`
+  INNER JOIN `cat_calle` ON `cat_calle`.`IdCalle` = `direccion`.`FkCalle`";
 
   try {
 
@@ -38,30 +56,34 @@ WHERE Nombre = '$nombre';";
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
 
-
 });
 
-//agregar cliente
-$app -> post('/api/cliente/agregar', function(Request $request, Response $response){
+//agregar Cliente
+$app -> post('/api/clientes/agregar', function(Request $request, Response $response){
 
 $nombre = $request -> getParam('Nombre');
-$APaterno = $request -> getParam('APaterno');
-$AMaterno = $request -> getParam('AMaterno');
-$tel
-$cel
-$sexo
-$casa
-$auto
-$lugarTrabajo
-$telTrabajo
-$antiguedad
-$
+$aPaterno = $request -> getParam('APaterno');
+$aMaterno = $request -> getParam('AMaterno');
+$fechaNacimiento = $request -> getParam('FechaNacimiento');
+$sexo = $request -> getParam('Sexo');
+$telefono = $request -> getParam('Telefono');
+$celular = $request -> getParam('Celular');
+$casaPropia = $request -> getParam('CasaPropia');
+$autoPropio = $request -> getParam('AutoPropio');
+$lugarTrabajo = $request -> getParam('LugarTrabajo');
+$telTrabajo = $request -> getParam('TelTrabajo');
+$antiguedad = $request -> getParam('Antiguedad');
+$fkDireccion = $request -> getParam('FkDireccion');
+$fkDireccionCobro = $request -> getParam('FkDireccionCobro');
+$estatus = $request -> getParam('Estatus');
 
-$tipoU = $request -> getParam('FkCat_TipoUsuario');
 
-
-  $consulta = "INSERT INTO usuario(Nombre, Contrasena, FkCat_TipoUsuario)
-  values (:Nombre, :Contrasena, :FkCat_TipoUsuario)";
+$consulta = "INSERT INTO Cliente(Nombre, APaterno, AMaterno, FechaNacimiento,
+Sexo, Telefono, Celular, CasaPropia, AutoPropio, LugarTrabajo, TelTrabajo, Antiguedad,
+FkDireccion, FkDireccionCobro, Estatus)
+values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
+:Sexo, :Telefono, :Celular, :CasaPropia, :AutoPropio, :LugarTrabajo, :TelTrabajo, :Antiguedad,
+:FkDireccion, :FkDireccionCobro, :Estatus)";
 
   try {
 
@@ -70,10 +92,22 @@ $tipoU = $request -> getParam('FkCat_TipoUsuario');
       $db = $db -> conectar();
       $stmt = $db -> prepare($consulta);
       $stmt -> bindParam(':Nombre', $nombre);
-      $stmt -> bindParam(':Contrasena', $contrasena);
-      $stmt -> bindParam(':FkCat_TipoUsuario', $tipoU);
+      $stmt -> bindParam(':APaterno', $aPaterno);
+      $stmt -> bindParam(':AMaterno', $aMaterno);
+      $stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
+      $stmt -> bindParam(':Sexo', $sexo);
+      $stmt -> bindParam(':Telefono', $telefono);
+      $stmt -> bindParam(':Celular', $celular);
+      $stmt -> bindParam(':CasaPropia', $casaPropia);
+      $stmt -> bindParam(':AutoPropio', $autoPropio);
+      $stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
+      $stmt -> bindParam(':TelTrabajo', $telTrabajo);
+      $stmt -> bindParam(':Antiguedad', $antiguedad);
+      $stmt -> bindParam(':FkDireccion', $fkDireccion);
+      $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
+      $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Usuario agregado"}';
+      echo '{"notice": {"text": "Cliente agregado"}';
       //Exportar y mostrar JSON
 
   } catch (PDOException $e) {
@@ -84,22 +118,46 @@ $tipoU = $request -> getParam('FkCat_TipoUsuario');
 });
 
 
-//Acrualizar usuarios
-$app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Response $response){
+//Actualizar cliente
+$app -> put('/api/clientes/actualizar/{IdCliente}', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdUsuario');
+  $id = $request -> getAttribute('IdCliente');
   $nombre = $request -> getParam('Nombre');
-  $contrasena = $request -> getParam('Contrasena');
-  $tipoU = $request -> getParam('FkCat_TipoUsuario');
+  $aPaterno = $request -> getParam('APaterno');
+  $aMaterno = $request -> getParam('AMaterno');
+  $fechaNacimiento = $request -> getParam('FechaNacimiento');
+  $sexo = $request -> getParam('Sexo');
+  $telefono = $request -> getParam('Telefono');
+  $celular = $request -> getParam('Celular');
+  $casaPropia = $request -> getParam('CasaPropia');
+  $autoPropio = $request -> getParam('AutoPropio');
+  $lugarTrabajo = $request -> getParam('LugarTrabajo');
+  $telTrabajo = $request -> getParam('TelTrabajo');
+  $antiguedad = $request -> getParam('Antiguedad');
+  $fkDireccion = $request -> getParam('FkDireccion');
+  $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
+  $estatus = $request -> getParam('Estatus');
 
 
 
-  $consulta = "UPDATE  usuario SET
+  $consulta = "UPDATE  Cliente SET
       Nombre =                       :Nombre,
-      Contrasena =               :Contrasena,
-      FkCat_TipoUsuario =  :FkCat_TipoUsuario
+      APaterno =                   :APaterno,
+      AMaterno =                   :AMaterno,
+      FechaNacimiento =     :FechaNacimiento,
+      Sexo =                           :Sexo,
+      Telefono =                   :Telefono,
+      Celular =                     :Celular,
+      CasaPropia =               :CasaPropia,
+      AutoPropio =               :AutoPropio,
+      LugarTrabajo =           :LugarTrabajo,
+      TelTrabajo =               :TelTrabajo,
+      Antiguedad =               :Antiguedad,
+      FkDireccion =             :FkDireccion,
+      FkDireccionCobro =   :FkDireccionCobro,
+      Estatus =                      :Estatus
 
-  WHERE IdUsuario = $id";
+  WHERE IdCliente = $id";
 
   try {
 
@@ -108,10 +166,22 @@ $app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Re
       $db = $db -> conectar();
       $stmt = $db -> prepare($consulta);
       $stmt -> bindParam(':Nombre', $nombre);
-      $stmt -> bindParam(':Contrasena', $contrasena);
-      $stmt -> bindParam(':FkCat_TipoUsuario', $tipoU);
+      $stmt -> bindParam(':APaterno', $aPaterno);
+      $stmt -> bindParam(':AMaterno', $aMaterno);
+      $stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
+      $stmt -> bindParam(':Sexo', $sexo);
+      $stmt -> bindParam(':Telefono', $telefono);
+      $stmt -> bindParam(':Celular', $celular);
+      $stmt -> bindParam(':CasaPropia', $casaPropia);
+      $stmt -> bindParam(':AutoPropio', $autoPropio);
+      $stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
+      $stmt -> bindParam(':TelTrabajo', $telTrabajo);
+      $stmt -> bindParam(':Antiguedad', $antiguedad);
+      $stmt -> bindParam(':FkDireccion', $fkDireccion);
+      $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
+      $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Usuario actualizado"}';
+      echo '{"notice": {"text": "Cliente actualizado"}';
       //Exportar y mostrar JSON
 
   } catch (PDOException $e) {
@@ -121,12 +191,12 @@ $app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Re
 
 });
 
-//Eliminar usuarios
-$app -> delete('/api/usuario/eliminar/{IdUsuario}', function(Request $request, Response $response){
+//Eliminar cliente
+$app -> delete('/api/clientes/eliminar/{IdCliente}', function(Request $request, Response $response){
 
-$id = $request -> getAttribute('IdUsuario');
+$id = $request -> getAttribute('IdCliente');
 
-  $consulta = "DELETE FROM usuario WHERE IdUsuario = '$id';";
+  $consulta = "DELETE FROM Cliente WHERE IdCliente = '$id';";
 
   try {
 
@@ -136,13 +206,12 @@ $id = $request -> getAttribute('IdUsuario');
       $stmt = $db -> query($consulta);
       $stmt -> execute();
       $db = null;
-      echo '{"notice": {"text": "Usuario borrado"}';
+      echo '{"notice": {"text": "Cliente borrado"}';
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
 
 
 });
-
 
 ?>

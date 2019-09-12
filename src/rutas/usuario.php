@@ -7,7 +7,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 //obetener usuarios
 $app -> get('/api/usuario', function(Request $request, Response $response){
 
-  $consulta = "select usuario.Nombre, usuario.Contrasena, cat_tipousuario.TipoUsuario
+  $consulta = "select usuario.IdUsuario, usuario.Nombre, usuario.Contrasena, cat_tipousuario.TipoUsuario
 from usuario
 INNER JOIN cat_tipousuario on usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario";
 

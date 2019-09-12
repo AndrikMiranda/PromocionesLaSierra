@@ -115,7 +115,7 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
 
         $id = $request -> getAttribute('IdColonia');
         
-          $consulta = "DELETE FROM cat_colonia WHERE IdColonia = $id;";
+          $consulta = "DELETE FROM cat_colonia WHERE IdColonia = $id";
         
           try {
         
