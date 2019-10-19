@@ -2,6 +2,7 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
+
 //---------------------------------------OBTENER REGISTRO COBRADOR POR MES MEDIANTE EL ID
 $app -> get('/api/cobradores/{IdCobrador}', function(Request $request, Response $response){
 
@@ -141,5 +142,6 @@ INNER JOIN cliente ON cuenta.`FkCliente` = cliente.`IdCliente`
   }
 
 });
+
 
 ?>

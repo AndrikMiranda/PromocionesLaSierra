@@ -4,6 +4,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //$app = new \Slim\App;
 
+//INCOMPLETO. Estructura de otra ruta (para guiarse).
+
 //obetener todos los vendedores
 $app -> get('/api/vendedores', function(Request $request, Response $response){
 
@@ -33,6 +35,7 @@ FROM
   }
 
 });
+
 
 //obetener un vendedor por id
 $app -> get('/api/vendedores/{IdVendedor}', function(Request $request, Response $response){
@@ -65,10 +68,11 @@ FROM
 
 });
 
-//obetener un vendedor por nombre
-$app -> get('/api/vendedores/{NombreVendedor}', function(Request $request, Response $response){
+//obtener un vendedor por nombre
+$app -> get('/api/vendedores/nombre/{NombreVendor}', function(Request $request, Response $response){
 
-  $nombre = $request -> getAttribute('NombreVendedor');
+  $nombre = $request -> getAttribute('NombreVendor');
+
   $consulta = "SELECT
   `vendedor`.`IdVendedor`,
   `vendedor`.`NombreVendedor`,
@@ -76,7 +80,7 @@ $app -> get('/api/vendedores/{NombreVendedor}', function(Request $request, Respo
   `vendedor`.`AMaterno`,
   `vendedor`.`Estatus`
 FROM
-  `vendedor` WHERE `IdVendedor` = $nombre";
+  `vendedor` WHERE `NombreVendedor` like '%$nombre%'";
 
   try {
 

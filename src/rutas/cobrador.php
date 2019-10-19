@@ -4,6 +4,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //$app = new \Slim\App;
 
+//INCOMPLETO. Estructura de otra ruta (para guiarse).
+
 //obetener todos los cobradores
 $app -> get('/api/cobradores', function(Request $request, Response $response){
 
