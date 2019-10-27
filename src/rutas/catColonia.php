@@ -115,7 +115,11 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
 
         $id = $request -> getAttribute('IdColonia');
         
+<<<<<<< HEAD
           $consulta = "DELETE FROM cat_colonia WHERE IdColonia = $id;";
+=======
+          $consulta = "DELETE FROM cat_colonia WHERE IdColonia = $id";
+>>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
         
           try {
         

@@ -5,10 +5,23 @@ use Psr\Http\Message\ResponseInterface as Response;
 //Obtener Ruta
 $app -> get('/api/ruta', function(Request $request, Response $response){
 
+<<<<<<< HEAD
     $consulta = "SELECT a.IdRuta,a.NumeroRuta,b.NomColonia,b.CP
                  FROM ruta a, cat_colonia b
                  WHERE a.FkColonia = b.IdColonia
                  ORDER BY IdRuta";
+=======
+    $consulta = "SELECT
+                ruta.IdRuta,
+                ruta.NumeroRuta,
+                ruta.FkColonia,
+                cat_colonia.NomColonia,
+                cat_colonia.CP
+                FROM
+                ruta
+                INNER JOIN cat_colonia ON ruta.FkColonia = cat_colonia.IdColonia
+                ORDER BY ruta.IdRuta";
+>>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
  
     try {
  
@@ -32,12 +45,27 @@ $app -> get('/api/ruta', function(Request $request, Response $response){
 $app -> get('/api/ruta/{NumeroRuta}', function(Request $request, Response $response){
 
     $NumeroRuta = $request -> getAttribute('NumeroRuta');
+<<<<<<< HEAD
     
       $consulta = "SELECT a.IdRuta,a.NumeroRuta,b.NomColonia,b.CP
                    FROM ruta a, cat_colonia b
                    WHERE a.FkColonia = b.IdColonia 
                    AND NumeroRuta LIKE '%$NumeroRuta%'
                    ORDER BY IdRuta";
+=======
+
+    $consulta = "SELECT
+                ruta.IdRuta,
+                ruta.NumeroRuta,
+                ruta.FkColonia,
+                cat_colonia.NomColonia,
+                cat_colonia.CP
+                FROM
+                ruta
+                INNER JOIN cat_colonia ON ruta.FkColonia = cat_colonia.IdColonia
+                where ruta.NumeroRuta = '$NumeroRuta'
+                ORDER BY ruta.IdRuta";    
+>>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
     
       try {
     
@@ -64,11 +92,18 @@ $app -> get('/api/ruta/{NumeroRuta}', function(Request $request, Response $respo
         $NumeroRuta = $request -> getParam('NumeroRuta');
         $FkColonia = $request -> getParam('FkColonia');
         
+<<<<<<< HEAD
          
           $consulta = "INSERT INTO ruta(NumeroRuta,FkColonia)
                        values (:NumeroRuta, :FkColonia)";
         
           try {
+=======
+        $consulta = "INSERT INTO ruta(NumeroRuta,FkColonia)
+                       values (:NumeroRuta, :FkColonia)";
+        
+        try {
+>>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
         
             //Instanciacion de base de datos
               $db = new db();
@@ -87,7 +122,11 @@ $app -> get('/api/ruta/{NumeroRuta}', function(Request $request, Response $respo
         
         });
 
+<<<<<<< HEAD
           //Actualizar Ruta
+=======
+        //Actualizar Ruta
+>>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
         $app -> put('/api/ruta/actualizar/{IdRuta}', function(Request $request, Response $response){
 
         $id = $request -> getAttribute('IdRuta');
