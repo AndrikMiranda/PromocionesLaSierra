@@ -128,6 +128,7 @@ $app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Re
 
 });
 
+
 //Eliminar usuarios
 $app -> delete('/api/usuario/eliminar/{IdUsuario}', function(Request $request, Response $response){
 
@@ -150,6 +151,9 @@ $id = $request -> getAttribute('IdUsuario');
 
 
 });
+
+
+
 
 
 ?>

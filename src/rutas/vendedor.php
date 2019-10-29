@@ -4,19 +4,23 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //$app = new \Slim\App;
 
-//INCOMPLETO. Estructura de otra ruta (para guiarse).
+// REVISAR FUNCIONAMIENTO DE RUTAS ACTUALIZADAS DE VENDEDOR.
 
 //obetener todos los vendedores
 $app -> get('/api/vendedores', function(Request $request, Response $response){
 
   $consulta = "SELECT
-  `vendedor`.`IdVendedor`,
-  `vendedor`.`NombreVendedor`,
-  `vendedor`.`APaterno`,
-  `vendedor`.`AMaterno`,
-  `vendedor`.`Estatus`
-FROM
-  `vendedor`";
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
+  cat_estatus_usuarios
+  WHERE
+  cat_tipousuario.IdTipoUsuario = 3";
 
   try {
 
@@ -35,20 +39,24 @@ FROM
   }
 
 });
-
-
+/*
 //obetener un vendedor por id
-$app -> get('/api/vendedores/{IdVendedor}', function(Request $request, Response $response){
+$app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdVendedor');
+  $id = $request -> getAttribute('IdUsuario');
   $consulta = "SELECT
-  `vendedor`.`IdVendedor`,
-  `vendedor`.`NombreVendedor`,
-  `vendedor`.`APaterno`,
-  `vendedor`.`AMaterno`,
-  `vendedor`.`Estatus`
-FROM
-  `vendedor` WHERE `IdVendedor` = $id";
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
+  cat_estatus_usuarios
+  WHERE
+  cat_tipousuario.IdTipoUsuario = 3
+  AND IdUsuario = $id";
 
   try {
 
@@ -69,18 +77,23 @@ FROM
 });
 
 //obtener un vendedor por nombre
-$app -> get('/api/vendedores/nombre/{NombreVendor}', function(Request $request, Response $response){
+$app -> get('/api/vendedores/nombre/{Nombre}', function(Request $request, Response $response){
 
-  $nombre = $request -> getAttribute('NombreVendor');
+  $nombre = $request -> getAttribute('Nombre');
 
   $consulta = "SELECT
-  `vendedor`.`IdVendedor`,
-  `vendedor`.`NombreVendedor`,
-  `vendedor`.`APaterno`,
-  `vendedor`.`AMaterno`,
-  `vendedor`.`Estatus`
-FROM
-  `vendedor` WHERE `NombreVendedor` like '%$nombre%'";
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
+  cat_estatus_usuarios
+  WHERE
+  cat_tipousuario.IdTipoUsuario = 3 
+  AND usuario.Nombre LIKE '%$nombre%'";
 
   try {
 
@@ -100,58 +113,19 @@ FROM
 
 });
 
-//agregar vendedores
-$app -> post('/api/vendedores/agregar', function(Request $request, Response $response){
-
-$nombre = $request -> getParam('NombreVendedor');
-$aPaterno = $request -> getParam('APaterno');
-$aMaterno = $request -> getParam('AMaterno');
-$estatus = $request -> getParam('Estatus');
-
-
-$consulta = "INSERT INTO vendedor(NombreVendedor, APaterno, AMaterno, Estatus)
-values (:NombreVendedor, :APaterno, :AMaterno, :Estatus)";
-
-  try {
-
-    //Instanciacion de base de datos
-      $db = new db();
-      $db = $db -> conectar();
-      $stmt = $db -> prepare($consulta);
-      $stmt -> bindParam(':NombreVendedor', $nombre);
-      $stmt -> bindParam(':APaterno', $aPaterno);
-      $stmt -> bindParam(':AMaterno', $aMaterno);
-      $stmt -> bindParam(':Estatus', $estatus);
-      $stmt -> execute();
-      echo '{"notice": {"text": "Vendedor agregado"}';
-      //Exportar y mostrar JSON
-
-  } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
-  }
-
-
-});
-
-
 //Actualizar vendedores
-$app -> put('/api/vendedores/actualizar/{IdVendedor}', function(Request $request, Response $response){
+$app -> put('/api/vendedores/actualizar/{IdUsuario}', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdVendedor');
-  $nombre = $request -> getParam('NombreVendedor');
-  $aPaterno = $request -> getParam('APaterno');
-  $aMaterno = $request -> getParam('AMaterno');
-  $estatus = $request -> getParam('Estatus');
+  $id = $request -> getAttribute('IdUsuario');
+  $nombre = $request -> getParam('Nombre');
+  $tipo = $request -> getParam('FkCat_TipoUsuario');
+  $estatus = $request -> getParam('FkCat_Estatus_Usuario');
 
-
-
-  $consulta = "UPDATE  vendedor SET
-      NombreVendedor =       :NombreVendedor,
-      APaterno =                   :APaterno,
-      AMaterno =                   :AMaterno,
-      Estatus =                      :Estatus
-
-  WHERE IdVendedor = $id";
+ $consulta = "UPDATE usuario 
+  SET Nombre = :Nombre,
+  AMateFkCat_TipoUsuario = :FkCat_TipoUsuario,
+  FkCat_Estatus_Usuario = :FkCat_Estatus_Usuario
+  WHERE IdUsuario = $id";
 
   try {
 
@@ -159,10 +133,9 @@ $app -> put('/api/vendedores/actualizar/{IdVendedor}', function(Request $request
       $db = new db();
       $db = $db -> conectar();
       $stmt = $db -> prepare($consulta);
-      $stmt -> bindParam(':NombreVendedor', $nombre);
-      $stmt -> bindParam(':APaterno', $aPaterno);
-      $stmt -> bindParam(':AMaterno', $aMaterno);
-      $stmt -> bindParam(':Estatus', $estatus);
+      $stmt -> bindParam(':Nombre', $nombre);
+      $stmt -> bindParam(':FkCat_TipoUsuario', $tipo);
+      $stmt -> bindParam(':FkCat_Estatus_Usuario', $estatus);
       $stmt -> execute();
       echo '{"notice": {"text": "Vendedor actualizado"}';
       //Exportar y mostrar JSON
@@ -175,11 +148,11 @@ $app -> put('/api/vendedores/actualizar/{IdVendedor}', function(Request $request
 });
 
 //Eliminar vendedores
-$app -> delete('/api/vendedores/eliminar/{IdVendedor}', function(Request $request, Response $response){
+$app -> delete('/api/vendedores/eliminar/{IdUsuario}', function(Request $request, Response $response){
 
-$id = $request -> getAttribute('IdVendedor');
+$id = $request -> getAttribute('IdUsuario');
 
-  $consulta = "DELETE FROM vendedor WHERE IdVendedor = '$id';";
+  $consulta = "DELETE FROM usuario WHERE IdUsuario = '$id'";
 
   try {
 
@@ -196,5 +169,5 @@ $id = $request -> getAttribute('IdVendedor');
 
 
 });
-
+*/
 ?>
