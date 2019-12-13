@@ -17,10 +17,12 @@ $app -> get('/api/vendedores', function(Request $request, Response $response){
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
-  cat_tipousuario.IdTipoUsuario = 3";
+  usuario.FkCat_TipoUsuario = 3";
 
   try {
 
@@ -39,7 +41,7 @@ $app -> get('/api/vendedores', function(Request $request, Response $response){
   }
 
 });
-/*
+
 //obetener un vendedor por id
 $app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $response){
 
@@ -52,8 +54,10 @@ $app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
   cat_tipousuario.IdTipoUsuario = 3
   AND IdUsuario = $id";
@@ -89,8 +93,10 @@ $app -> get('/api/vendedores/nombre/{Nombre}', function(Request $request, Respon
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
   cat_tipousuario.IdTipoUsuario = 3 
   AND usuario.Nombre LIKE '%$nombre%'";
@@ -169,5 +175,5 @@ $id = $request -> getAttribute('IdUsuario');
 
 
 });
-*/
+
 ?>

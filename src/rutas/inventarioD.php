@@ -7,16 +7,27 @@ use Psr\Http\Message\ResponseInterface as Response;
 //--------------------------------OBETENER INVENTARIO COMPLETO
 $app -> get('/api/inventarioD', function(Request $request, Response $response){
 
-  $consulta = "SELECT inventariodevolucion.IdInventarioD, inventariodevolucion.FkDevolucion, devolucion.FkVenta, venta.FkSubVenta,
-  devolucion.EstadoArticulo, subventa.FkArticulo, articulo.Codigo, articulo.NombreArticulo,
-  articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo, cat_categoriaarticulos.NombreCategoria
-  FROM inventariodevolucion
-  INNER JOIN devolucion ON inventariodevolucion.FkDevolucion = devolucion.IdDevolucion
-  INNER JOIN venta ON devolucion.FkVenta = venta.IdVenta
-  INNER JOIN subventa ON venta.FkSubVenta = subventa.IdSubVenta
-  INNER JOIN articulo ON subventa.FkArticulo = articulo.IdArticulo
-  INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
-  INNER JOIN venta = ON subventa.FkVenta = venta.IdVenta";
+  $consulta = "SELECT
+            inventariodevolucion.IdInventarioD,
+            inventariodevolucion.FkDevolucion,
+            devolucion.FkVenta,
+            venta.FkSubVenta,
+            subventa.FkArticulo,
+            articulo.NombreArticulo,
+            articulo.Codigo,
+            devolucion.EstadoArticulo,
+            articulo.Costo,
+            articulo.PrecioVenta,
+            articulo.PrecioMayoreo,
+            articulo.FkCategoria,
+            cat_categoriaarticulos.NombreCategoria
+            FROM
+            inventariodevolucion
+            INNER JOIN devolucion ON inventariodevolucion.FkDevolucion = devolucion.IdDevolucion
+            INNER JOIN venta ON devolucion.FkVenta = venta.IdVenta
+            INNER JOIN subventa ON venta.FkSubVenta = subventa.IdSubVenta
+            INNER JOIN articulo ON subventa.FkArticulo = articulo.IdArticulo
+            INNER JOIN cat_categoriaarticulos ON articulo.FkCategoria = cat_categoriaarticulos.IdCategoria";
 
   try {
 

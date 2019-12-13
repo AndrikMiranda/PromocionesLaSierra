@@ -55,10 +55,11 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
     $app -> post('/api/catCalle/agregar', function(Request $request, Response $response){
 
         $NombreCalle = $request -> getParam('NomCalle');
-        $TipoCalle = $request -> getParam('TipoCalle');
+        $lat = $request -> getParam('Latitud');
+        $lon = $request -> getParam('Longitud');
          
-          $consulta = "INSERT INTO cat_calle(NomCalle,Tipo)
-                       values (:NomCalle, :TipoCalle )";
+          $consulta = "INSERT INTO cat_calle(NomCalle,Latitud,Longitud)
+                       values (:NomCalle, :Latitud, :Longitud)";
         
           try {
         
@@ -67,7 +68,8 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
               $db = $db -> conectar();
               $stmt = $db -> prepare($consulta);
               $stmt -> bindParam(':NomCalle', $NombreCalle);
-              $stmt -> bindParam(':TipoCalle', $TipoCalle);
+              $stmt -> bindParam(':Latitud', $lat);
+              $stmt -> bindParam(':Longitud', $lon);
               $stmt -> execute();
               echo '{"notice": {"text": "Calle agregada"}';
               //Exportar y mostrar JSON
@@ -84,12 +86,14 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
 
         $id = $request -> getAttribute('IdCalle');
         $NombreCalle = $request -> getParam('NomCalle');
-        $TipoCalle = $request -> getParam('TipoCalle');
+        $lat = $request -> getParam('Latitud');
+        $lon = $request -> getParam('Longitud');
       
       
         $consulta = "UPDATE cat_calle SET
                      NomCalle = :NomCalle,
-                     Tipo = :TipoCalle
+                     Latitud = :Latitud,
+                     Longitud = :Longitud
                      WHERE IdCalle = $id";
       
         try {
@@ -99,7 +103,8 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
             $db = $db -> conectar();
             $stmt = $db -> prepare($consulta);
             $stmt -> bindParam(':NomCalle', $NombreCalle);
-            $stmt -> bindParam(':TipoCalle', $TipoCalle);
+            $stmt -> bindParam(':Latitud', $lat);
+            $stmt -> bindParam(':Longitud', $lon);
             $stmt -> execute();
             echo '{"notice": {"text": "Calle actualizada"}';
             //Exportar y mostrar JSON
@@ -109,7 +114,7 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
         }
       
       });
-
+      
       //Eliminar Calle
     $app -> delete('/api/catCalle/eliminar/{IdCalle}', function(Request $request, Response $response){
 
@@ -125,7 +130,8 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
               $stmt = $db -> query($consulta);
               $stmt -> execute();
               $db = null;
-              echo '{"notice": {"text": "Calle borrada"}';
+              echo '{"notice": {"text": "Calle eliminada
+                "}';
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
           }

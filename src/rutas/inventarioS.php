@@ -142,6 +142,13 @@ $FkInventario = $request -> getParam('FkInventarioP');
 $cantidad = $request -> getParam('CantidadSecundario');
 $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
 
+if ($cantidad <= 0){
+  $FkInventario = null;
+  $cantidad = null;
+  $tipoMovimiento = null;
+  echo '{"error": {"text": "La cantidad del producto que desea ingresar es menor a 1"}';
+}
+
 //  --------------- Verificar que no se encuentre ya registrado
 $consulta1 = "SELECT FkInventarioP FROM inventariosecundario
 WHERE FkInventarioP = $FkInventario";
@@ -170,6 +177,64 @@ if ($id > 0) {
   $FkInventario = null;
   $cantidad = null;
   $tipoMovimiento = null;
+}
+
+$consultaInvP = "SELECT CantidadPrincipal FROM inventarioprincipal
+WHERE IdInventarioP = $FkInventario";
+
+try {
+
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consultaInvP);
+    $cantidad = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+
+    $json = json_encode($cantidad);
+    echo $json;
+
+} catch (PDOException $e) {
+  echo '{"error": {"text": '.$e -> getMessage().'}';
+}
+
+$decode=json_decode($json, true);
+$cantidadP = $decode[0]['FkInventarioP'];
+
+if ($cantidadP <= 0){
+  echo '+++++++|';
+  echo $cantidadP;
+  echo '|+++++++';
+  $FkInventario = null;
+  $cantidad = null;
+  $tipoMovimiento = null;
+  echo '{"error": {"text": "El producto que desea ingresar se encuentra agotado en el inventario principal"}';
+}
+echo '----------------------------------------------------------------';
+$cantidadP = $cantidadP - $cantidad;
+
+if ($cantidadP < 0){
+  $FkInventario = null;
+  $cantidad = null;
+  $tipoMovimiento = null;
+  echo '{"error": {"text": "El producto que desea ingresar sobrepasa lo registrado en stock del inventario principal"}';
+} else {
+  $consultaInvP = "UPDATE inventarioprincipal SET CantidadPrincipal =
+  :CantidadPrincipal WHERE IdInventarioP = $FkInventario";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $stmt = $db -> prepare($consultaInvP);
+      $stmt -> bindParam(':CantidadSecundario', $cantidad);
+      $stmt -> execute();
+      echo '{"notice": {"text": "Inventario principal actualizado"}';
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
 }
 
 // Insert en el inventario secundario

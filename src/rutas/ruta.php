@@ -4,11 +4,14 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 /*
   -> Obtener todas las las colonias que pertenecen a una ruta.
+  -> Obtener colonias por ruta asignada
   -> Colonias de una ruta especifica.
   -> Agregar colonia a una ruta.
   -> Actualizar Ruta, dando el idRuta de la tabla ruta.
   -> Eliminar colonia de una ruta de la tabla ruta.
+  -> Eliminar colonia de una ruta de la tabla ruta dado un NumeroRuta y un FkColonia.
  */
+ 
 //Obtener Ruta
 $app->get('/api/ruta', function (Request $request, Response $response) {
 
@@ -40,6 +43,39 @@ $app->get('/api/ruta', function (Request $request, Response $response) {
     }
 
 });
+
+
+//Obtener colonias por ruta asignada
+$app->get('/api/ruta/coloniasPorRuta', function (Request $request, Response $response) {
+
+    $consulta = "SELECT
+                cat_colonia.IdColonia,
+                cat_colonia.NomColonia,
+                cat_colonia.CP,
+                ruta.IdRuta,
+                ruta.NumeroRuta
+                FROM
+                ruta
+                INNER JOIN cat_colonia ON ruta.FkColonia = cat_colonia.IdColonia";
+
+    try {
+
+        //Instanciacion de base de datos
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar = $db->query($consulta);
+        $Ruta = $ejecutar->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+        //Exportar y mostrar JSON
+        echo json_encode($Ruta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+
+    } catch (PDOException $e) {
+        echo '{"error": {"text": ' . $e->getMessage() . '}';
+    }
+
+});
+
 
 //Obtener Ruta Especifica
 $app->get('/api/ruta/{NumeroRuta}', function (Request $request, Response $response) {
@@ -157,6 +193,9 @@ $app->delete('/api/ruta/eliminar/{IdRuta}', function (Request $request, Response
 
 });
 
+
+
+
 //Eliminar colonia de una ruta de la tabla ruta dado un NumeroRuta y un FkColonia.
 $app->delete('/api/ruta/eliminar/{NumeroRuta}/{FkColonia}', function (Request $request, Response $response) {
 
@@ -182,3 +221,31 @@ $app->delete('/api/ruta/eliminar/{NumeroRuta}/{FkColonia}', function (Request $r
   }
 
 });
+
+
+//Obtener colonias que no han sido asigandas a ninguna ruta.
+$app->get('/api/ruta/coloniasSinRuta', function (Request $request, Response $response) {
+
+    $consulta = "SELECT cat_colonia.IdColonia, cat_colonia.NomColonia, cat_colonia.CP
+    FROM cat_colonia
+    WHERE cat_colonia.IdColonia NOT IN (SELECT DISTINCT ruta.FkColonia FROM ruta)";
+
+    try {
+
+        //Instanciacion de base de datos
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar = $db->query($consulta);
+        $Ruta = $ejecutar->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+        //Exportar y mostrar JSON
+        echo json_encode($Ruta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        
+    } catch (PDOException $e) {
+        echo '{"error": {"text": ' . $e->getMessage() . '}';
+    }
+
+});
+
+?>

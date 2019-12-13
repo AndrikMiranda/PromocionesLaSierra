@@ -79,6 +79,44 @@ $app -> get('/api/reporte/clientePorEstatus/{EstatusPagador}', function(Request 
  
 });
 
+//Obtener Cuentas en base a su estatus
+$app -> get('/api/reporte/clientePorEstatus', function(Request $request, Response $response){
+
+    $EstatusPagador = $request -> getAttribute('EstatusPagador');
+
+    $consulta = "SELECT
+                cliente.IdCliente,
+                cliente.Nombre,
+                cliente.APaterno,
+                cliente.AMaterno,
+                cuenta.NumeroCuenta,
+                cuenta.ContadorVencidos,
+                cuenta.ContadorAtrasados,
+                cuenta.EstatusPagador,
+                cuenta.SaldoTotal
+                FROM
+                cliente
+                INNER JOIN cuenta ON cuenta.FkCliente = cliente.IdCliente
+                ORDER BY cuenta.SaldoTotal DESC";
+ 
+    try {
+ 
+          //Instanciacion de base de datos
+           $db = new db();
+           $db = $db -> conectar();
+           $ejecutar = $db -> query($consulta);
+           $SalPend = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+           $db = null;
+ 
+           //Exportar y mostrar JSON
+           echo json_encode($SalPend, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+ 
+       } catch (PDOException $e) {
+           echo '{"error": {"text": '.$e -> getMessage().'}';
+       }
+ 
+});
+
 //Obtener reporte mensual por ruta
 $app -> get('/api/reporte/reporteMensualPorRuta/{ruta}/{mes}', function(Request $request, Response $response){
 
@@ -265,10 +303,8 @@ $app -> get('/api/reporte/ventasPorVendedor/{idVendedor}', function(Request $req
 });
 
 //Obtener Lista Negra General
-$app -> get('/api/reporte/listaNegra/', function(Request $request, Response $response){
+$app -> get('/api/reporte/listaNegra', function(Request $request, Response $response){
 
-    $FechaInicial = $request -> getParam('FechaInicial');
-    $FechaFinal = $request -> getParam('FechaFinal');
     $Motivo = $request -> getParam('FkCat_Motivo');
 
     if(empty($Motivo) || $Motivo =='')
@@ -279,8 +315,6 @@ $app -> get('/api/reporte/listaNegra/', function(Request $request, Response $res
                          FROM listanegra a,cliente b, cat_motivo c
                          WHERE a.FKCliente=b.IdCliente 
                          AND a.FKCat_Motivo=c.IdMotivo 
-                         AND a.FechaAgregado>='$FechaInicial'
-                         AND a.FechaAgregado<='$FechaFinal'
                          ORDER BY a.FechaAgregado DESC";
     }else{
 
@@ -289,8 +323,6 @@ $app -> get('/api/reporte/listaNegra/', function(Request $request, Response $res
                           FROM listanegra a,cliente b, cat_motivo c
                           WHERE a.FKCliente=b.IdCliente 
                           AND a.FKCat_Motivo=c.IdMotivo 
-                          AND a.FechaAgregado>='$FechaInicial'
-                          AND a.FechaAgregado<='$FechaFinal'
                           AND a.FkCat_Motivo=$Motivo
                           ORDER BY a.FechaAgregado DESC";
     }
