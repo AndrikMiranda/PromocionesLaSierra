@@ -60,6 +60,41 @@ FROM
 
 });
 
+//obetener todoscliente y cuenta 
+$app -> get('/api/clientes/clienteYCuenta', function(Request $request, Response $response){
+
+  $consulta = "SELECT
+  cliente.IdCliente,
+  cliente.Nombre,
+  cliente.APaterno,
+  cliente.AMaterno,
+  cuenta.NumeroCuenta,
+  cuenta.EstatusPagador
+  FROM
+  cuenta
+  INNER JOIN cliente ON cliente.IdCliente = cuenta.FkCliente
+  WHERE
+  cuenta.EstatusPagador <> 'ListaNegra'";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consulta);
+      $clientes = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+      //Exportar y mostrar JSON
+      echo json_encode($clientes);
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
+
+});
+
+
 //obetener clientes para ventas
 $app -> get('/api/clientes/ventas', function(Request $request, Response $response){
 

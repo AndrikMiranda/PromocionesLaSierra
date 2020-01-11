@@ -4,7 +4,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //$app = new \Slim\App;
 
-//INCOMPLETO. Estructura de utra ruta (para guiarse).
+//INCOMPLETO. Estructura de otra ruta (para guiarse).
 
 //obetener todos los ventas
 $app -> get('/api/ventas', function(Request $request, Response $response){
@@ -113,8 +113,8 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
                                    SaldoPendiente, HorarioCobro, TipoVenta, GpsLat, 
                                    GpsLon, EstatusAprobacion)
                   values (:FkCuenta, :FkSubVenta, :TotalVenta, :Enganche, 
-                          :FkVendedor, :PeriodoPago, :CantidadAbono, 
                           :SaldoPendiente, :HorarioCobro, :TipoVenta, :GpsLat, 
+                          :FkVendedor, :PeriodoPago, :CantidadAbono, 
                           :GpsLon, :EstatusAprobacion)";
 
     try {

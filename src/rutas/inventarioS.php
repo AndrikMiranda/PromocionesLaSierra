@@ -316,6 +316,48 @@ $app -> put('/api/inventarioS/actualizarcantidad/{IdInventarioS}', function(Requ
   $cantidad = $request -> getParam('CantidadSecundario');
   $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
 
+  
+  $consulta = "SELECT 
+  inventariosecundario.CantidadSecundario
+  FROM
+  inventariosecundario
+  INNER JOIN inventarioprincipal ON inventariosecundario.FkInventarioP = inventarioprincipal.IdInventarioP
+  INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+  WHERE
+  inventariosecundario.CantidadSecundario > 0
+  AND
+  inventariosecundario.IdInventarioS = $id";
+
+try {
+
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta);
+    $result = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+    $row_cnt = $result->num_rows;
+    
+    $json = json_encode($result);
+
+} catch (PDOException $e) {
+  echo '{"error": {"text": '.$e -> getMessage().'}';
+}
+$decode=json_decode($json, true);
+$cantidadS = $decode[0]['CantidadSecundario'];
+  if($row_cnt > 0 ) {
+
+    echo '{"notice": {"text": "Actualmente se encuentra sin stock."}}';
+
+  } else {
+  
+  $cantidadFinal = $cantidadS - $cantidad;
+  
+  if ($cantidadFinal < 0) {
+
+    return '{"notice": {"text": "La cantidad que desea actualizar sobrepasa la cantidad que hay en el inventario."}';
+  }
+  
   $consulta1 = "UPDATE inventariosecundario SET CantidadSecundario =
   :CantidadSecundario WHERE IdInventarioS = $id";
 
@@ -355,6 +397,7 @@ $app -> put('/api/inventarioS/actualizarcantidad/{IdInventarioS}', function(Requ
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
+}
 
 });
 
@@ -479,5 +522,96 @@ $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
 
 });
 
+//--------------------------------EDITAR CANTIDAD DE PRODUCTO POR ID
+$app -> put('/api/inventarioS/actualizarcantidadventa/{IdInventarioS}', function(Request $request, Response $response){
+
+  $id = $request -> getAttribute('IdInventarioS');
+  $cantidad = $request -> getParam('CantidadSecundario');
+  $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
+
+  
+  $consulta = "SELECT 
+  inventariosecundario.CantidadSecundario
+  FROM
+  inventariosecundario
+  INNER JOIN inventarioprincipal ON inventariosecundario.FkInventarioP = inventarioprincipal.IdInventarioP
+  INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+  WHERE
+  inventariosecundario.CantidadSecundario > 0
+  AND
+  inventariosecundario.IdInventarioS = $id";
+
+try {
+
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta);
+    $result = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+    $row_cnt = $result->num_rows;
+    
+    $json = json_encode($result);
+
+} catch (PDOException $e) {
+  echo '{"error": {"text": '.$e -> getMessage().'}';
+}
+$decode=json_decode($json, true);
+$cantidadS = $decode[0]['CantidadSecundario'];
+  if($row_cnt > 0 ) {
+
+    echo '{"notice": {"text": "Actualmente se encuentra sin stock."}}';
+
+  } else {
+  
+  $cantidadFinal = $cantidadS - $cantidad;
+  echo  $cantidadFinal;
+  if ($cantidadFinal < 0) {
+
+    return '{"notice": {"text": "La cantidad que desea actualizar sobrepasa la cantidad que hay en el inventario."}';
+  }
+  
+  $consulta1 = "UPDATE inventariosecundario SET CantidadSecundario =
+  :CantidadSecundario WHERE IdInventarioS = $id";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $stmt = $db -> prepare($consulta1);
+      $stmt -> bindParam(':CantidadSecundario', $cantidadFinal);
+      $stmt -> execute();
+      echo '{"notice": {"text": "Inventario actualizado"}';
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
+
+  $consulta2 = ("INSERT INTO movimientoinventario(FkInventarioS, Cantidad, Fecha,
+  FkUsuario, FkTipoMovimiento) VALUES (:FkInventarioS, :Cantidad, :Fecha,
+  :FkUsuario, :FkTipoMovimiento)");
+
+  $inventario = $id;
+  $fecha = date("Y-m-d");
+  $usuario = '2';
+
+  try {
+    $db = new db();
+    $db = $db -> conectar();
+    $stmt = $db -> prepare($consulta2);
+    $stmt -> bindParam(':FkInventarioS', $inventario);
+    $stmt -> bindParam(':Cantidad', $cantidad);
+    $stmt -> bindParam(':Fecha', $fecha);
+    $stmt -> bindParam(':FkUsuario', $usuario);
+    $stmt -> bindParam(':FkTipoMovimiento', $tipoMovimiento);
+    $stmt -> execute();
+      echo '{"notice": {"text": "Inventario actualizado"}';
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
+}
+
+});
 
 ?>

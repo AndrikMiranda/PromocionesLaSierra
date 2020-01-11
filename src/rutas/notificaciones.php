@@ -156,33 +156,29 @@ $fkDireccion = $request -> getParam('FkDireccion');
 $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
 $estatus = $request -> getParam('Estatus');
 
-$consulta0 = "SELECT `cliente`.`Nombre`,
-             `cliente`.`APaterno`,
-             `cliente`.`AMaterno`,
-             `cliente`.`FechaNacimiento`,
-             `cliente`.`Sexo`,
-             `cliente`.`Telefono`,
-             `cliente`.`Celular`,
-             `cliente`.`CasaPropia`,
-             `cliente`.`AutoPropio`,
-             `cliente`.`TelTrabajo`,
-             `cliente`.`LugarTrabajo`,
-             `cliente`.`Antiguedad`,
-             `cliente`.`FkDireccion`,
-             `cliente`.`FkDireccionCobro`,
-             `cliente`.`Estatus`
+$consulta0 = "SELECT `cliente`.`IdCliente`
              FROM `cliente`
-             WHERE `Nombre` = '".$nombre."' OR `APaterno` = '".$aPaterno."'  OR `AMaterno` = '".$aMaterno."' OR `FechaNacimiento` = '".$fechaNacimiento."'
-              OR `Sexo` = '".$sexo."' OR `Telefono` = '".$telefono."' OR `Celular` = '".$celular."' OR `CasaPropia` = '".$casaPropia."' OR `AutoPropio` = '".$autoPropio."'
-              OR `LugarTrabajo` = '".$lugarTrabajo."' OR `TelTrabajo` = '".$telTrabajo."' OR `Antiguedad` = '".$antiguedad."' OR `FkDireccion` = '".$fkDireccion."'
-              OR `FkDireccionCobro` = '".$fkDireccionCobro."' OR `Estatus` = '".$estatus."'";
+             WHERE `Nombre` = '".$nombre."' AND `APaterno` = '".$aPaterno."'  AND `AMaterno` = '".$aMaterno."' AND `FechaNacimiento` = '".$fechaNacimiento."'
+              OR `Telefono` = '".$telefono."' OR `Celular` = '".$celular."'";
 
-$numRows = mysqli_num_rows($consulta0);
-if($numRows > 0)
-{
+              try {
 
-echo '{"notice": {"text": coincidencias = "'.$numRows.'"}';
+                //Instanciacion de base de datos
+                  $db = new db();
+                  $db = $db -> conectar();
+                  $ejecutar = $db -> query($consulta0);
+                  $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+                  $db = null;
+                  $row_cnt = $notificaciones->num_rows;
+                  //echo json_encode($notificaciones);
+                  $json = json_encode($notificaciones);
 
+              } catch (PDOException $e) {
+                echo '{"error": {"text": '.$e -> getMessage().'}';
+              }
+
+if ($notificaciones == null) {
+  echo '{"notice": {"text": "No se encontraron coincidencias."}';
 $consulta = "INSERT INTO tabla_valor (
             `tabla_valor`.`clave`,
             `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
@@ -217,12 +213,6 @@ $consulta = "INSERT INTO tabla_valor (
                         'FkDireccionCobro', :FkDireccionCobro,
                         'Estatus', :Estatus)";
 
-/*
-values (:Clave, Nombre, :Nombre, APaterno, :APaterno, AMaterno, :AMaterno, FechaNacimiento, :FechaNacimiento,
-Sexo, :Sexo, Telefono, :Telefono, Celular, :Celular, CasaPropia, :CasaPropia, AutoPropio, :AutoPropio, LugarTrabajo, :LugarTrabajo,
-TelTrabajo, :TelTrabajo, Antiguedad, :Antiguedad, FkDireccion, :FkDireccion, FkDireccionCobro, :FkDireccionCobro, Estatus, :Estatus)";
-*/
-
   try {
 
     //Instanciacion de base de datos
@@ -246,20 +236,89 @@ TelTrabajo, :TelTrabajo, Antiguedad, :Antiguedad, FkDireccion, :FkDireccion, FkD
       $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
       $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Cliente agregado" '.$numRows.'}';
+      echo '{"notice": {"text": "Cliente agregado"}';
       //Exportar y mostrar JSON
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
+} else{
+  echo '{"notice": {"text": se encontraron coincidencias = "'.$json.'"}';
+  $coincidencia = '1';
+  $consulta = ("INSERT INTO tabla_valor (
+    `tabla_valor`.`clave`,
+    `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
+    `tabla_valor`.`descripcion2`,  `tabla_valor`.`dato2`,
+    `tabla_valor`.`descripcion3`,  `tabla_valor`.`dato3`,
+    `tabla_valor`.`descripcion4`,  `tabla_valor`.`dato4`,
+    `tabla_valor`.`descripcion5`, `tabla_valor`.`dato5`,
+    `tabla_valor`.`descripcion6`,  `tabla_valor`.`dato6`,
+    `tabla_valor`.`descripcion7`,  `tabla_valor`.`dato7`,
+    `tabla_valor`.`descripcion8`,  `tabla_valor`.`dato8`,
+    `tabla_valor`.`descripcion9`,  `tabla_valor`.`dato9`,
+    `tabla_valor`.`descripcion10`, `tabla_valor`.`dato10`,
+    `tabla_valor`.`descripcion11`, `tabla_valor`.`dato11`,
+    `tabla_valor`.`descripcion12`, `tabla_valor`.`dato12`,
+    `tabla_valor`.`descripcion13`, `tabla_valor`.`dato13`,
+    `tabla_valor`.`descripcion14`, `tabla_valor`.`dato14`,
+    `tabla_valor`.`descripcion15`, `tabla_valor`.`dato15`,
+    `tabla_valor`.`descripcion16`, `tabla_valor`.`dato16`,
+    `tabla_valor`.`descripcion17`, `tabla_valor`.`dato17`)
+        values (:clave,
+                'Nombre',:Nombre,
+                'APaterno',:APaterno,
+                'AMaterno',:AMaterno,
+                'FechaNacimiento', :FechaNacimiento,
+                'Sexo',:Sexo,
+                'Telefono', :Telefono,
+                'Celular', :Celular,
+                'CasaPropia', :CasaPropia,
+                'AutoPropio', :AutoPropio,
+                'LugarTrabajo', :LugarTrabajo,
+                'TelTrabajo',:TelTrabajo,
+                'Antiguedad',:Antiguedad,
+                'FkDireccion', :FkDireccion,
+                'FkDireccionCobro', :FkDireccionCobro,
+                'Estatus', :Estatus,
+                'Coincidencias', :Coincidencias,
+                'IdCliente', :IdCliente)");
 
-} else {
-  echo '{"notice": {"text": nel no hay coincidencias = "'.$numRows.'"}';
+
+try {
+
+$decode=json_decode($json, true);
+$idCliente = $decode[0]['IdCliente'];
+//Instanciacion de base de datos
+$db = new db();
+$db = $db -> conectar();
+$stmt = $db -> prepare($consulta);
+$stmt -> bindParam(':clave', $clave);
+$stmt -> bindParam(':Nombre', $nombre);
+$stmt -> bindParam(':APaterno', $aPaterno);
+$stmt -> bindParam(':AMaterno', $aMaterno);
+$stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
+$stmt -> bindParam(':Sexo', $sexo);
+$stmt -> bindParam(':Telefono', $telefono);
+$stmt -> bindParam(':Celular', $celular);
+$stmt -> bindParam(':CasaPropia', $casaPropia);
+$stmt -> bindParam(':AutoPropio', $autoPropio);
+$stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
+$stmt -> bindParam(':TelTrabajo', $telTrabajo);
+$stmt -> bindParam(':Antiguedad', $antiguedad);
+$stmt -> bindParam(':FkDireccion', $fkDireccion);
+$stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
+$stmt -> bindParam(':Estatus', $estatus);
+$stmt -> bindParam(':Coincidencias', $coincidencia);
+$stmt -> bindParam(':IdCliente', $idCliente);
+$stmt -> execute();
+echo '{"notice": {"text": "Cliente agregado"}';
+//Exportar y mostrar JSON
+
+} catch (PDOException $e) {
+echo '{"error": {"text": '.$e -> getMessage().'}';
 }
-
+}
 });
-
-
 
 //Actualizar notificaciones de clientes
 $app -> put('/api/notificaciones/actualizar/{idTablaValor}', function(Request $request, Response $response){
@@ -388,17 +447,6 @@ $id = $request -> getAttribute('idTablaValor');
 
 
 });
-
-
-
-
-
-
-
-
-
-
-
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

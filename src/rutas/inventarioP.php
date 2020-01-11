@@ -245,6 +245,41 @@ $app -> put('/api/inventarioP/actualizarcantidad/{IdInventarioP}', function(Requ
   $cantidad = $request -> getParam('CantidadPrincipal');
   $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
 
+  $consulta0 = "SELECT inventarioprincipal.CantidadPrincipal
+  FROM inventarioprincipal
+  WHERE inventarioprincipal.CantidadPrincipal > 0 
+  AND inventarioprincipal.IdInventarioP = $id";
+
+try {
+
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta0);
+    $result = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+    $row_cnt = $result->num_rows;
+    
+    $json = json_encode($result);
+
+} catch (PDOException $e) {
+  echo '{"error": {"text": '.$e -> getMessage().'}';
+}
+$decode=json_decode($json, true);
+$cantidadS = $decode[0]['CantidadPrincipal'];
+  if($row_cnt > 0 ) {
+
+    echo '{"notice": {"text": "Actualmente se encuentra sin stock."}}';
+
+  } else {
+  
+  $cantidadFinal = $cantidadS - $cantidad;
+  echo  $cantidadFinal;
+  if ($cantidadFinal < 0) {
+
+    return '{"notice": {"text": "La cantidad que desea actualizar sobrepasa la cantidad que hay en el inventario."}';
+  }
+
   $consulta = "UPDATE  inventarioprincipal SET CantidadPrincipal =
   :CantidadPrincipal WHERE IdInventarioP = $id";
 
