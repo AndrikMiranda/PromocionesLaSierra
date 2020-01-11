@@ -17,17 +17,19 @@ $app -> get('/api/cobradores', function(Request $request, Response $response){
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
-  cat_tipousuario.IdTipoUsuario = 2";
+  usuario.FkCat_TipoUsuario = 2";
 
   try {
 
     //Instanciacion de base de datos
       $db = new db();
       $db = $db -> conectar();
-      $ejecutacobradoresr = $db -> query($consulta);
+      $ejecutar = $db -> query($consulta);
       $cobradores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
@@ -53,8 +55,10 @@ $app -> get('/api/cobradores/{IdUsuario}', function(Request $request, Response $
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
   cat_tipousuario.IdTipoUsuario = 2
   AND IdUsuario = $id";
@@ -90,8 +94,10 @@ $app -> get('/api/cobradores/nombre/{Nombre}', function(Request $request, Respon
   cat_estatus_usuarios.Descripcion
   FROM
   usuario
-  INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario ,
-  cat_estatus_usuarios
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
   cat_tipousuario.IdTipoUsuario = 2 
   AND usuario.Nombre LIKE '%$nombre%'";
@@ -203,3 +209,5 @@ $app->get('/api/rutaCobrador/todos', function (Request $request, Response $respo
     }
 
 });
+
+?>

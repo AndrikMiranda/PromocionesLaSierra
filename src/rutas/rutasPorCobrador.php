@@ -13,21 +13,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //Asignar ruta a cobrador
 $app->post('/api/rutaCobrador/agregarRelacion', function (Request $request, Response $response) {
 
-    $FkRuta = $request->getParam('fkRuta');
-    $FkCobrador = $request->getParam('fkUsuario');
+    $FkRuta = $request->getParam('NumeroRuta');
+    $FkUsuario = $request->getParam('IdUsuario');
+    $FkCat_TipoUsuario = $request->getParam('FkCat_TipoUsuario');
 
     $consulta = "INSERT INTO ruta_cobrador(fkRuta,fkUsuario)
                    values (:FkRuta, :FkCobrador)";
 
     try {
 
-        if ($FkCobrador == 2) {
+        if ($FkCat_TipoUsuario == 2) {
             //Instanciacion de base de datos
             $db = new db();
             $db = $db->conectar();
             $stmt = $db->prepare($consulta);
             $stmt->bindParam(':FkRuta', $FkRuta);
-            $stmt->bindParam(':FkCobrador', $FkCobrador);
+            $stmt->bindParam(':FkCobrador', $FkUsuario);
             $stmt->execute();
             echo '{"notice": {"text": "Ruta asignada satisfactoriamente."}';
         } else {
@@ -43,7 +44,7 @@ $app->post('/api/rutaCobrador/agregarRelacion', function (Request $request, Resp
 //Cobradores por ruta
 $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request $request, Response $response) {
 
-    $NumeroRuta = $request->getParam('NumeroRuta');
+    $NumeroRuta = $request->getAttribute('NumeroRuta');
 
     $consulta = "SELECT
                 ruta_cobrador.fkRuta,
@@ -55,7 +56,7 @@ $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request 
                 ruta_cobrador
                 INNER JOIN usuario ON ruta_cobrador.fkUsuario = usuario.IdUsuario
                 INNER JOIN ruta ON ruta_cobrador.fkRuta = ruta.IdRuta
-                where ruta.NumeroRuta = '$NumeroRuta'";
+                where ruta_cobrador.fkRuta = $NumeroRuta";
 
     try {
 
@@ -66,7 +67,7 @@ $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request 
         $db = null;
 
         echo json_encode($resultado);
-
+        
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';
     }
@@ -79,12 +80,13 @@ $app->get('/api/rutaCobrador/cobradoresSinRuta', function (Request $request, Res
     $consulta = "SELECT
                 usuario.IdUsuario,
                 usuario.Nombre,
-                usuario.FkCat_Estatus_Usuario
+                usuario.FkCat_Estatus_Usuario,
+                usuario.FkCat_TipoUsuario
                 FROM
-                ruta_cobrador
-                INNER JOIN usuario ON ruta_cobrador.fkUsuario = usuario.IdUsuario
+                usuario
                 WHERE usuario.IdUsuario NOT IN (SELECT ruta_cobrador.fkUsuario
-                                                FROM ruta_cobrador)";
+                                                FROM ruta_cobrador) AND
+                usuario.FkCat_TipoUsuario = 2";
 
     try {
 
@@ -105,18 +107,18 @@ $app->get('/api/rutaCobrador/cobradoresSinRuta', function (Request $request, Res
 //Desasignar cobrador de ruta
 $app->delete('/api/rutaCobrador/desasignarCobrador/{fkUsuario}', function (Request $request, Response $response) {
 
-    $FkUsuario = $request->getParam('fkUsuario');
+    $FkUsuario = $request->getAttribute('fkUsuario');
 
     $consulta = "DELETE
                  FROM ruta_cobrador
-                 WHERE ruta_cobrador.fkUsuario = '$FkUsuario'";
+                 WHERE ruta_cobrador.fkUsuario = $FkUsuario";
 
     try {
 
         $db = new db();
         $db = $db->conectar();
         $ejecutar = $db->query($consulta);
-        $resultado = $ejecutar->fetchAll(PDO::FETCH_OBJ);
+        $ejecutar -> execute();
         $db = null;
 
         echo '{"notice": {"text": "Ruta desasignada satisfactoriamente."}';

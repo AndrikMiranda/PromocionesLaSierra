@@ -12,7 +12,6 @@ $app -> get('/api/ventas', function(Request $request, Response $response){
   $consulta = "SELECT
                 venta.IdVenta,
                 venta.FkCuenta,
-                venta.FkSubVenta,
                 venta.TotalVenta,
                 venta.Enganche,
                 venta.Fecha,
@@ -55,7 +54,6 @@ $app -> get('/api/ventas/{IdVenta}', function(Request $request, Response $respon
   $consulta = "SELECT
                 venta.IdVenta,
                 venta.FkCuenta,
-                venta.FkSubVenta,
                 venta.TotalVenta,
                 venta.Enganche,
                 venta.Fecha,
@@ -95,7 +93,6 @@ $app -> get('/api/ventas/{IdVenta}', function(Request $request, Response $respon
 $app->post('/api/ventas/agregar', function (Request $request, Response $response) {
 
     $fkCuenta = $request->getParam('FkCuenta');
-    $fkSubVenta = $request->getParam('FkSubVenta');
     $totalVenta = $request->getParam('TotalVenta');
     $enganche = $request->getParam('Enganche');
     $fkVendedor = $request->getParam('FkVendedor');
@@ -108,11 +105,11 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
     $gpsLon = $request->getParam('GpsLon');
     $estatusAprobacion = $request->getParam('EstatusAprobacion');
 
-    $consulta = "INSERT INTO venta(FkCuenta, FkSubVenta, TotalVenta, Enganche, 
+    $consulta = "INSERT INTO venta(FkCuenta, TotalVenta, Enganche, 
                                    FkVendedor, PeriodoPago ,CantidadAbono, 
                                    SaldoPendiente, HorarioCobro, TipoVenta, GpsLat, 
                                    GpsLon, EstatusAprobacion)
-                  values (:FkCuenta, :FkSubVenta, :TotalVenta, :Enganche, 
+                  values (:FkCuenta, :TotalVenta, :Enganche, 
                           :FkVendedor, :PeriodoPago, :CantidadAbono, 
                           :SaldoPendiente, :HorarioCobro, :TipoVenta, :GpsLat, 
                           :GpsLon, :EstatusAprobacion)";
@@ -125,7 +122,6 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
         $stmt = $db->prepare($consulta);
 
         $stmt->bindParam(':FkCuenta', $fkCuenta);
-        $stmt->bindParam(':FkSubVenta', $fkSubVenta);
         $stmt->bindParam(':TotalVenta', $totalVenta);
         $stmt->bindParam(':Enganche', $enganche);
         $stmt->bindParam(':FkVendedor', $fkVendedor);
@@ -156,7 +152,6 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
 
     $idVenta = $request -> getAttribute('IdVenta');
     $fkCuenta = $request->getParam('FkCuenta');
-    $fkSubVenta = $request->getParam('FkSubVenta');
     $totalVenta = $request->getParam('TotalVenta');
     $enganche = $request->getParam('Enganche');
     $fkVendedor = $request->getParam('FkVendedor');
@@ -172,7 +167,6 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
     $consulta = "UPDATE  venta 
               SET 
                FkCuenta = :FkCuenta,
-               FkSubVenta = :FkSubVenta,
                TotalVenta = :TotalVenta,
                Enganche = :Enganche,
                FkVendedor = :FkVendedor,
@@ -195,7 +189,6 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
     $stmt = $db -> prepare($consulta);
 
     $stmt->bindParam(':FkCuenta', $fkCuenta);
-    $stmt->bindParam(':FkSubVenta', $fkSubVenta);
     $stmt->bindParam(':TotalVenta', $totalVenta);
     $stmt->bindParam(':Enganche', $enganche);
     $stmt->bindParam(':FkVendedor', $fkVendedor);

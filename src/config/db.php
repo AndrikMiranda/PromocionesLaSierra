@@ -1,16 +1,9 @@
 <?php
   class db{
-<<<<<<< HEAD
-      private $host = 'localhost';
-      private $usuario = 'root';
-      private $password = '';
-      private $db = 'lasierra';
-=======
       private $host = 'mysql-jherrera.alwaysdata.net';
       private $usuario = 'jherrera';
       private $password = 'Arthamis07';
       private $db = 'jherrera_lasierra';
->>>>>>> Actualizacion Arturo. Nuevo push para que Ruben vea version actualizada
 
 
       public function conectar() {

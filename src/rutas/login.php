@@ -3,7 +3,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 
-
 //obetener login
 $app -> post('/api/login', function(Request $request, Response $response){
 
@@ -31,7 +30,7 @@ $app -> post('/api/login', function(Request $request, Response $response){
 
         if($rows > 0){
         	$responseData['status'] = 1;
-            $responseData['response'] = $auth->fetchAll(PDO::FETCH_ASSOC);
+          $responseData['response'] = $auth->fetchAll(PDO::FETCH_ASSOC);
         	// $responseData['response'] = $auth->fetchAll();
         }else{
         	$responseData['status'] = 0;
