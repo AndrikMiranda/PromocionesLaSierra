@@ -2,10 +2,230 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-//$app = new \Slim\App;
 
-//INCOMPLETO. Estructura de otra ruta (para guiarse).
+/*idUser int
+* page - (int) Pagina a consultar
+* pageSize - (int) Tamano de pagina
+* likeSearch (string) Para busquqeda con %like%
+* columnaGenerica - Columna para hacer busqueda generica, requiere columna como esta en la tabla de la DB.
+* parametroGenerico - Condicion de busqueda generica
+*/
+$app -> get('/api/clientes', function(Request $request, Response $response){
+  $mCustomHelper = new MyCustomHelper();
 
+  $idUsuario = $request->getParam('idUser');
+  $page = $request->getParam('page');
+  $limit = $request->getParam('pageSize');
+  $likeSearch = $request->getParam('likeSearch');
+  $columnaGenerica = $request->getParam('columnaGenerica');
+  $parametroColumnaGenerica = $request->getParam('parametroGenerico');
+
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $pageForReturn = $pageReal;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $consultaGenerica = "SELECT
+                    *
+                    FROM
+                    cliente
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $totalConsultaGenerica = "SELECT
+                    *
+                    FROM
+                    cliente
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $consultaTodos = "SELECT
+                    cliente.IdCliente,
+                    CONCAT(cliente.Nombre,' ',cliente.APaterno,' ',cliente.AMaterno) as Nombre,
+                    cliente.FechaNacimiento,
+                    cliente.Sexo,
+                    cliente.Telefono,
+                    cliente.Celular,
+                    cliente.CasaPropia,
+                    cliente.AutoPropio,
+                    cliente.LugarTrabajo,
+                    cliente.TelTrabajo,
+                    cliente.Antiguedad,
+                    cliente.Estatus,
+                    cat_calle.NomCalle,
+                    direccion.NumExterior,
+                    direccion.NumInterior,
+                    cat_colonia.NomColonia,
+                    cat_colonia.CP,
+                    cat_municipio.NomMunicipio,
+                    cat_estado.NomEstado,
+                    cuenta.NumeroCuenta,
+                    cuenta.EstatusPagador
+                    FROM
+                    cliente
+                    INNER JOIN direccion ON direccion.IdDireccion = cliente.FkDireccion AND direccion.IdDireccion = cliente.FkDireccionCobro
+                    INNER JOIN cat_estado ON cat_estado.IdEstado = direccion.FkEstado
+                    INNER JOIN cat_municipio ON cat_municipio.IdMunicipio = direccion.FkMunicipio
+                    INNER JOIN cat_colonia ON cat_colonia.IdColonia = direccion.FkColonia
+                    INNER JOIN cat_calle ON cat_calle.IdCalle = direccion.FkCalle
+                    INNER JOIN cuenta ON cuenta.FkCliente = cliente.IdCliente
+                    LIMIT $limit
+                    OFFSET $offset";
+
+  $consultaLikeSearch = "SELECT
+                        cliente.IdCliente,
+                        CONCAT(cliente.Nombre,' ',cliente.APaterno,' ',cliente.AMaterno) as Nombre,
+                        cliente.FechaNacimiento,
+                        cliente.Sexo,
+                        cliente.Telefono,
+                        cliente.Celular,
+                        cliente.CasaPropia,
+                        cliente.AutoPropio,
+                        cliente.LugarTrabajo,
+                        cliente.TelTrabajo,
+                        cliente.Antiguedad,
+                        cliente.Estatus,
+                        cat_calle.NomCalle,
+                        direccion.NumExterior,
+                        direccion.NumInterior,
+                        cat_colonia.NomColonia,
+                        cat_colonia.CP,
+                        cat_municipio.NomMunicipio,
+                        cat_estado.NomEstado,
+                        cuenta.NumeroCuenta,
+                        cuenta.EstatusPagador
+                        FROM
+                        cliente
+                        INNER JOIN direccion ON direccion.IdDireccion = cliente.FkDireccion AND direccion.IdDireccion = cliente.FkDireccionCobro
+                        INNER JOIN cat_estado ON cat_estado.IdEstado = direccion.FkEstado
+                        INNER JOIN cat_municipio ON cat_municipio.IdMunicipio = direccion.FkMunicipio
+                        INNER JOIN cat_colonia ON cat_colonia.IdColonia = direccion.FkColonia
+                        INNER JOIN cat_calle ON cat_calle.IdCalle = direccion.FkCalle
+                        INNER JOIN cuenta ON cuenta.FkCliente = cliente.IdCliente
+                        WHERE Nombre LIKE '%$likeSearch%' OR
+                              APaterno LIKE '%$likeSearch%' OR
+                              AMaterno LIKE '%$likeSearch%' 
+                        LIMIT $limit
+                        OFFSET $offset";
+
+$totalConsultaTodos = "SELECT
+                    COUNT(cliente.IdCliente) as Total
+                    FROM
+                    cliente
+                    INNER JOIN direccion ON direccion.IdDireccion = cliente.FkDireccion AND direccion.IdDireccion = cliente.FkDireccionCobro
+                    INNER JOIN cat_estado ON cat_estado.IdEstado = direccion.FkEstado
+                    INNER JOIN cat_municipio ON cat_municipio.IdMunicipio = direccion.FkMunicipio
+                    INNER JOIN cat_colonia ON cat_colonia.IdColonia = direccion.FkColonia
+                    INNER JOIN cat_calle ON cat_calle.IdCalle = direccion.FkCalle
+                    INNER JOIN cuenta ON cuenta.FkCliente = cliente.IdCliente";
+                    
+$totalConsultaLikeSearch = "SELECT
+                    COUNT(cliente.IdCliente) as Total
+                    FROM
+                    cliente
+                    INNER JOIN direccion ON direccion.IdDireccion = cliente.FkDireccion AND direccion.IdDireccion = cliente.FkDireccionCobro
+                    INNER JOIN cat_estado ON cat_estado.IdEstado = direccion.FkEstado
+                    INNER JOIN cat_municipio ON cat_municipio.IdMunicipio = direccion.FkMunicipio
+                    INNER JOIN cat_colonia ON cat_colonia.IdColonia = direccion.FkColonia
+                    INNER JOIN cat_calle ON cat_calle.IdCalle = direccion.FkCalle
+                    INNER JOIN cuenta ON cuenta.FkCliente = cliente.IdCliente
+                    WHERE Nombre LIKE '%$likeSearch%' OR
+                              APaterno LIKE '%$likeSearch%' OR
+                              AMaterno LIKE '%$likeSearch%' ";  
+
+  try {
+      if($columnaGenerica != null){
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($consultaGenerica);
+          $clientes = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($totalConsultaGenerica);
+          $mTotal = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $mTotal = json_decode( json_encode($total[0]) , true );
+          
+          $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total'] );
+          return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+      
+    } else if($likeSearch != null){
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consultaLikeSearch);
+      $clientes = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($totalConsultaLikeSearch);
+      $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $mTotal = json_decode( json_encode($total[0]) , true );
+      
+      $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
+      return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+      
+    } else if ($likeSearch == null) {
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($consultaTodos);
+        $clientes = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($totalConsultaTodos);
+        $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+      
+        $mTotal = json_decode( json_encode($total[0]) , true );
+
+        $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
+        return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+
+    } else {
+      $mErrorResponse = new ErrorResponse(200, 'Hubo un problema con la solicitud. Intentelo de nuevo.', false);
+      return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+
+    }
+
+  } catch (PDOException $e) {
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+  }
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 //obetener todoscliente
 $app -> get('/api/clientes', function(Request $request, Response $response){
 
@@ -55,12 +275,79 @@ FROM
       echo json_encode($clientes);
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 });
+*/
+/*
+//obetener todoscliente
+$app -> get('/api/clientes/like', function(Request $request, Response $response){
+
+  $like = $request -> getParam('busqueda');
+  $like2 = $request -> getParam('busqueda');
+  $like3= $request -> getParam('busqueda');
+  
+
+  $consulta = "SELECT
+  `cliente`.`IdCliente`,
+  `cliente`.`Nombre`,
+  `cliente`.`APaterno`,
+  `cliente`.`AMaterno`,
+  `cliente`.`FechaNacimiento`,
+  `cliente`.`Sexo`,
+  `cliente`.`Telefono`,
+  `cliente`.`Celular`,
+  `cliente`.`CasaPropia`,
+  `cliente`.`AutoPropio`,
+  `cliente`.`LugarTrabajo`,
+  `cliente`.`TelTrabajo`,
+  `cliente`.`Antiguedad`,
+  `cliente`.`Estatus`,
+  `cat_calle`.`NomCalle`,
+  `direccion`.`NumExterior`,
+  `direccion`.`NumInterior`,
+  `cat_colonia`.`NomColonia`,
+  `cat_colonia`.`CP`,
+  `cat_municipio`.`NomMunicipio`,
+  `cat_estado`.`NomEstado`
+FROM
+  `cliente`
+  INNER JOIN `direccion` ON `direccion`.`IdDireccion` = `cliente`.`FkDireccion`
+    AND `direccion`.`IdDireccion` = `cliente`.`FkDireccionCobro`
+  INNER JOIN `cat_estado` ON `cat_estado`.`IdEstado` = `direccion`.`FkEstado`
+  INNER JOIN `cat_municipio` ON `cat_municipio`.`IdMunicipio` =
+    `direccion`.`FkMunicipio`
+  INNER JOIN `cat_colonia` ON `cat_colonia`.`IdColonia` =
+    `direccion`.`FkColonia`
+  INNER JOIN `cat_calle` ON `cat_calle`.`IdCalle` = `direccion`.`FkCalle`
+  WHERE `cliente`.`Nombre` LIKE '%$like%' OR
+   `cliente`.`APaterno` LIKE '%$like2%' OR
+   `cliente`.`AMaterno` LIKE '%$like3%' ";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consulta);
+      $clientes = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+      //Exportar y mostrar JSON
+      echo json_encode($clientes);
+
+  } catch (PDOException $e) {
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+  }
+
+});
+*/
 
 //obetener clientes para ventas
+/*
 $app -> get('/api/clientes/ventas', function(Request $request, Response $response){
 
   $consulta = "SELECT
@@ -87,12 +374,14 @@ $app -> get('/api/clientes/ventas', function(Request $request, Response $respons
       echo json_encode($clientes);
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 });
-
+*/
 //obetener cliente por id
+/*
 $app -> get('/api/clientes/{IdCliente}', function(Request $request, Response $response){
 
 $id = $request -> getAttribute('IdCliente');
@@ -148,7 +437,7 @@ FROM
   }
 
 });
-
+*/
 //agregar Cliente
 $app -> post('/api/clientes/agregar', function(Request $request, Response $response){
 
@@ -202,7 +491,8 @@ values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
       //Exportar y mostrar JSON
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 

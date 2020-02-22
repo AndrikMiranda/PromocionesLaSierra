@@ -5,6 +5,15 @@ use Psr\Http\Message\ResponseInterface as Response;
 //obtener Articulos
 $app -> get('/api/articulos', function(Request $request, Response $response){
 
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+
+  $count = "SELECT COUNT(*) as Total FROM `articulo`";
+
     $consulta = "SELECT a.IdArticulo,a.Codigo,a.NombreArticulo,a.Costo,a.PrecioVenta,a.PrecioMayoreo,b.NombreCategoria 
                  FROM articulo a, cat_categoriaarticulos b 
                  WHERE a.FkCategoria=b.IdCategoria order by IdArticulo";
@@ -17,9 +26,19 @@ $app -> get('/api/articulos', function(Request $request, Response $response){
            $ejecutar = $db -> query($consulta);
            $Articulos = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
            $db = null;
+
+          $db = new db();
+          $db = $db->conectar();
+          $ejecutar1 = $db -> query($count);
+          $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
  
-           //Exportar y mostrar JSON
-           echo json_encode($Articulos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+          if($Articulos) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($Articulos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+          }
+          
  
        } catch (PDOException $e) {
            echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -27,14 +46,14 @@ $app -> get('/api/articulos', function(Request $request, Response $response){
  
 });
 //obtener Categoria en especifico
-$app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $response){
+$app -> get('/api/articulos/', function(Request $request, Response $response){
 
-    $NombreArt = $request -> getAttribute('NombreArt');
+  $NombreArt = $request -> getParam('NombreArt');
     
-      $consulta = "SELECT a.IdArticulo,a.Codigo,a.NombreArticulo,a.Costo,a.PrecioVenta,a.PrecioMayoreo,b.NombreCategoria 
-                   FROM articulo a, cat_categoriaarticulos b
-                   WHERE a.FkCategoria=b.IdCategoria and NombreArticulo LIKE '%$NombreArt%'
-                   order by IdArticulo;";
+  $consulta = "SELECT a.IdArticulo,a.Codigo,a.NombreArticulo,a.Costo,a.PrecioVenta,a.PrecioMayoreo,b.NombreCategoria 
+               FROM articulo a, cat_categoriaarticulos b
+               WHERE a.FkCategoria=b.IdCategoria and NombreArticulo LIKE '%$NombreArt%'
+               order by IdArticulo;";
     
       try {
     
@@ -45,8 +64,11 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
           $articulo = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
           $db = null;
     
-          //Exportar y mostrar JSON
-          echo json_encode($articulo);
+          if($articulo) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($articulo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+          }
     
       } catch (PDOException $e) {
         echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -54,6 +76,8 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
     
     
     });
+
+
 
     //Agregar Categoria Articulo
     $app -> post('/api/articulos/agregar', function(Request $request, Response $response){
@@ -82,8 +106,12 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
               $stmt -> bindParam(':PrecioMayoreo', $mayoreo);
               $stmt -> bindParam(':Categoria', $categoria);
               $stmt -> execute();
-              echo '{"notice": {"text": "Articulo agregado"}';
-              //Exportar y mostrar JSON
+            
+              if($stmt) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
         
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -93,9 +121,9 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
         });
 
                  //Actualizar Articulo
-    $app -> put('/api/articulos/actualizar/{IdArticulo}', function(Request $request, Response $response){
+    $app -> put('/api/articulos/actualizar/', function(Request $request, Response $response){
 
-        $id = $request -> getAttribute('IdArticulo');
+        $id = $request -> getParam('IdArticulo');
         $codigo = $request -> getParam('Codigo');
         $nombre = $request -> getParam('Nombre');
         $costo = $request -> getParam('Costo');
@@ -126,8 +154,12 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
             $stmt -> bindParam(':PrecioMayoreo', $mayoreo);
             $stmt -> bindParam(':Categoria', $categoria);
             $stmt -> execute();
-            echo '{"notice": {"text": "Categoria actualizada"}';
-            //Exportar y mostrar JSON
+
+            if($stmt) {
+              return $response->withStatus(201)
+                  ->withHeader('Content-Type', 'application/json')
+                  ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            }
       
         } catch (PDOException $e) {
           echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -136,9 +168,9 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
       });
 
             //Eliminar Articulo
-    $app -> delete('/api/articulos/eliminar/{IdArticulo}', function(Request $request, Response $response){
+    $app -> delete('/api/articulos/eliminar/', function(Request $request, Response $response){
 
-        $id = $request -> getAttribute('IdArticulo');
+        $id = $request -> getParam('IdArticulo');
         
           $consulta = "DELETE FROM articulo WHERE IdArticulo = $id;";
         
@@ -150,7 +182,13 @@ $app -> get('/api/articulos/{NombreArt}', function(Request $request, Response $r
               $stmt = $db -> query($consulta);
               $stmt -> execute();
               $db = null;
-              echo '{"notice": {"text": "Articulo borrado"}';
+              
+              if($stmt) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
+
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
           }

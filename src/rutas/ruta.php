@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  */
  
 //Obtener Ruta
-$app->get('/api/ruta', function (Request $request, Response $response) {
+$app->get('/api/ruta-', function (Request $request, Response $response) {
 
     $consulta = "SELECT
                 ruta.IdRuta,
@@ -36,7 +36,11 @@ $app->get('/api/ruta', function (Request $request, Response $response) {
         $db = null;
 
         //Exportar y mostrar JSON
-        echo json_encode($Ruta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        if($Ruta) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($Ruta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';

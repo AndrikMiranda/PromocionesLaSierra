@@ -5,7 +5,16 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 
 //obetener usuarios
-$app -> get('/api/usuario', function(Request $request, Response $response){
+$app -> get('/api/usuario/', function(Request $request, Response $response){
+  
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM usuario";
 
   $consulta = "select usuario.IdUsuario, usuario.Nombre, usuario.Contrasena, cat_tipousuario.TipoUsuario
 from usuario
@@ -21,7 +30,11 @@ INNER JOIN cat_tipousuario on usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipo
       $db = null;
 
       //Exportar y mostrar JSON
-      echo json_encode($usuarios);
+      if($usuarios) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($usuarios, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -31,14 +44,14 @@ INNER JOIN cat_tipousuario on usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipo
 });
 
 //obetener usuario en especifico
-$app -> get('/api/usuario/{Nombre}', function(Request $request, Response $response){
+$app -> get('/api/usuario/nombre/', function(Request $request, Response $response){
 
-$nombre = $request -> getAttribute('Nombre');
+$nombre = $request -> getParam('Nombre');
 
   $consulta = "select usuario.Nombre, usuario.Contrasena, cat_tipousuario.TipoUsuario
 from usuario
 INNER JOIN cat_tipousuario on usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
-WHERE Nombre LIKE '%$nombre%';";
+WHERE Nombre LIKE '%$nombre%'";
 
   try {
 
@@ -50,7 +63,11 @@ WHERE Nombre LIKE '%$nombre%';";
       $db = null;
 
       //Exportar y mostrar JSON
-      echo json_encode($usuarios);
+      if($usuarios) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($usuarios, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -82,6 +99,11 @@ $tipoU = $request -> getParam('FkCat_TipoUsuario');
       $stmt -> execute();
       echo '{"notice": {"text": "Usuario agregado"}';
       //Exportar y mostrar JSON
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -120,6 +142,11 @@ $app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Re
       $stmt -> execute();
       echo '{"notice": {"text": "Usuario actualizado"}';
       //Exportar y mostrar JSON
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -145,6 +172,11 @@ $id = $request -> getAttribute('IdUsuario');
       $stmt -> execute();
       $db = null;
       echo '{"notice": {"text": "Usuario borrado"}';
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }

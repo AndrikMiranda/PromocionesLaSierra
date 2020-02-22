@@ -7,8 +7,16 @@ use Psr\Http\Message\ResponseInterface as Response;
 // REVISAR FUNCIONAMIENTO DE RUTAS ACTUALIZADAS DE VENDEDOR.
 
 //obetener todos los vendedores
-$app -> get('/api/vendedores', function(Request $request, Response $response){
-
+$app -> get('/api/vendedores/', function(Request $request, Response $response){
+    
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+    
+  $count = "SELECT COUNT(*) as Total FROM usuario WHERE usuario.FkCat_TipoUsuario = 3";
+  
   $consulta = "SELECT
   usuario.Nombre,
   usuario.IdUsuario,
@@ -22,7 +30,9 @@ $app -> get('/api/vendedores', function(Request $request, Response $response){
 	INNER JOIN cat_estatus_usuarios 
   ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
   WHERE
-  usuario.FkCat_TipoUsuario = 3";
+  usuario.FkCat_TipoUsuario = 3
+  LIMIT $limit
+  OFFSET $offset";
 
   try {
 
@@ -32,9 +42,18 @@ $app -> get('/api/vendedores', function(Request $request, Response $response){
       $ejecutar = $db -> query($consulta);
       $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
-
-      //Exportar y mostrar JSON
-      echo json_encode($vendedores);
+      
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      if($vendedores) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($vendedores, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -43,9 +62,9 @@ $app -> get('/api/vendedores', function(Request $request, Response $response){
 });
 
 //obetener un vendedor por id
-$app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $response){
+$app -> get('/api/vendedores/IdUsuario/', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdUsuario');
+  $id = $request -> getParam('IdUsuario');
   $consulta = "SELECT
   usuario.Nombre,
   usuario.IdUsuario,
@@ -70,9 +89,14 @@ $app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $
       $ejecutar = $db -> query($consulta);
       $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
-
+      
       //Exportar y mostrar JSON
-      echo json_encode($vendedores);
+      if($vendedores) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($vendedores, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+      
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -81,9 +105,9 @@ $app -> get('/api/vendedores/{IdUsuario}', function(Request $request, Response $
 });
 
 //obtener un vendedor por nombre
-$app -> get('/api/vendedores/nombre/{Nombre}', function(Request $request, Response $response){
+$app -> get('/api/vendedores/nombre/', function(Request $request, Response $response){
 
-  $nombre = $request -> getAttribute('Nombre');
+  $nombre = $request -> getParam('Nombre');
 
   $consulta = "SELECT
   usuario.Nombre,
@@ -111,7 +135,11 @@ $app -> get('/api/vendedores/nombre/{Nombre}', function(Request $request, Respon
       $db = null;
 
       //Exportar y mostrar JSON
-      echo json_encode($vendedores);
+      if($vendedores) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($vendedores, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -143,8 +171,13 @@ $app -> put('/api/vendedores/actualizar/{IdUsuario}', function(Request $request,
       $stmt -> bindParam(':FkCat_TipoUsuario', $tipo);
       $stmt -> bindParam(':FkCat_Estatus_Usuario', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Vendedor actualizado"}';
+      
       //Exportar y mostrar JSON
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -168,7 +201,12 @@ $id = $request -> getAttribute('IdUsuario');
       $stmt = $db -> query($consulta);
       $stmt -> execute();
       $db = null;
-      echo '{"notice": {"text": "Vendedor borrado"}';
+      //echo '{"notice": {"text": "Vendedor borrado"}';
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }

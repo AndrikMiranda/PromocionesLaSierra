@@ -6,6 +6,15 @@ use Psr\Http\Message\ResponseInterface as Response;
 $app -> get('/api/catCalle', function(Request $request, Response $response){
 
      $consulta = "select * from cat_calle";
+
+     $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+    
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+
+    $count = "SELECT COUNT(*) as Total FROM cat_calle";
   
      try {
   
@@ -15,9 +24,18 @@ $app -> get('/api/catCalle', function(Request $request, Response $response){
             $ejecutar = $db -> query($consulta);
             $catcalle = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
             $db = null;
+
+            $db = new db();
+            $db = $db->conectar();
+            $ejecutar1 = $db -> query($count);
+            $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+            $db = null;
   
-            //Exportar y mostrar JSON
-            echo json_encode($catcalle);
+            if($catcalle) {
+              return $response->withStatus(200)
+                  ->withHeader('Content-Type', 'application/json')
+                  ->write(json_encode($catcalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            }
   
         } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -25,10 +43,10 @@ $app -> get('/api/catCalle', function(Request $request, Response $response){
   
 });
 
-//Obtener Calle en especifico
-$app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $response){
+//Obtener Calle en especifico con busqueda LIKE
+$app -> get('/api/catCalle/', function(Request $request, Response $response){
 
-    $NombreCalle = $request -> getAttribute('NombreCalle');
+    $NombreCalle = $request -> getParam('NombreCalle');
     
       $consulta = "select * from cat_calle WHERE NomCalle LIKE '%$NombreCalle%';";
     
@@ -41,8 +59,13 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
           $catcalle = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
           $db = null;
     
-          //Exportar y mostrar JSON
-          echo json_encode($catcalle);
+
+          if($catcalle) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($catcalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+          }
+
     
       } catch (PDOException $e) {
         echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -71,8 +94,12 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
               $stmt -> bindParam(':Latitud', $lat);
               $stmt -> bindParam(':Longitud', $lon);
               $stmt -> execute();
-              echo '{"notice": {"text": "Calle agregada"}';
-              //Exportar y mostrar JSON
+
+              if($stmt) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
         
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -106,8 +133,12 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
             $stmt -> bindParam(':Latitud', $lat);
             $stmt -> bindParam(':Longitud', $lon);
             $stmt -> execute();
-            echo '{"notice": {"text": "Calle actualizada"}';
-            //Exportar y mostrar JSON
+
+            if($stmt) {
+              return $response->withStatus(201)
+                  ->withHeader('Content-Type', 'application/json')
+                  ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            }
       
         } catch (PDOException $e) {
           echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -130,8 +161,13 @@ $app -> get('/api/catCalle/{NombreCalle}', function(Request $request, Response $
               $stmt = $db -> query($consulta);
               $stmt -> execute();
               $db = null;
-              echo '{"notice": {"text": "Calle eliminada
-                "}';
+
+              if($stmt) {
+                return $response->withStatus(201)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
+
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
           }

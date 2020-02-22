@@ -7,8 +7,16 @@ use Psr\Http\Message\ResponseInterface as Response;
 //INCOMPLETO. Estructura de utra ruta (para guiarse).
 
 //obetener todos los ventas
-$app -> get('/api/ventas', function(Request $request, Response $response){
-
+$app -> get('/api/ventas/', function(Request $request, Response $response){
+    
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+    
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM venta";
   $consulta = "SELECT
                 venta.IdVenta,
                 venta.FkCuenta,
@@ -25,8 +33,9 @@ $app -> get('/api/ventas', function(Request $request, Response $response){
                 venta.GpsLon,
                 venta.EstatusAprobacion
               FROM
-                venta";
-
+                venta
+              LIMIT $limit
+              OFFSET $offset";
   try {
 
     //Instanciacion de base de datos
@@ -35,21 +44,32 @@ $app -> get('/api/ventas', function(Request $request, Response $response){
       $ejecutar = $db -> query($consulta);
       $ventas = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
-
       //Exportar y mostrar JSON
       echo json_encode($ventas);
+      
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+      if($ventas) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($ventas));
+      }
+
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    echo '{"error": {"text": '.$e -> getMessage().'} }';
   }
-
 });
 
 
 //obetener una venta por id
-$app -> get('/api/ventas/{IdVenta}', function(Request $request, Response $response){
+$app -> get('/api/ventas/IdVenta/', function(Request $request, Response $response){
 
-  $idVenta = $request -> getAttribute('IdVenta');
+  $idVenta = $request -> getParam('IdVenta');
 
   $consulta = "SELECT
                 venta.IdVenta,
@@ -79,11 +99,14 @@ $app -> get('/api/ventas/{IdVenta}', function(Request $request, Response $respon
       $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($vendedores);
+      if($vendedores) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($vendedores));
+      }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    echo '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
@@ -136,11 +159,14 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
 
         $stmt->execute();
 
-        echo '{"notice": {"text": "Venta agregada"}';
-        //Exportar y mostrar JSON
+      if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+      }
 
     } catch (PDOException $e) {
-        echo '{"error": {"text": ' . $e->getMessage() . '}';
+        echo '{"error": {"text": ' . $e->getMessage() . '} }';
     }
 
 });
@@ -202,10 +228,15 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
     $stmt->bindParam(':EstatusAprobacion', $estatusAprobacion);
 
     $stmt -> execute();
-    echo '{"notice": {"text": "Venta actualizado"}';
+
+    if($stmt) {
+        return $response->withStatus(201)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+      }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    echo '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
@@ -225,9 +256,14 @@ $app -> delete('/api/ventas/eliminar/{IdVenta}', function(Request $request, Resp
         $stmt = $db -> query($consulta);
         $stmt -> execute();
         $db = null;
-        echo '{"notice": {"text": "Venta borrada"}';
+        
+    if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+      }
     } catch (PDOException $e) {
-      echo '{"error": {"text": '.$e -> getMessage().'}';
+      echo '{"error": {"text": '.$e -> getMessage().'} }';
     }
   
   

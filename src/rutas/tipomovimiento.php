@@ -5,8 +5,17 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 
 //--------------------------------OBTENER TODOS LOS MOVIMIENTOS
-$app -> get('/api/movimientos', function(Request $request, Response $response){
-
+$app -> get('/api/movimientos/', function(Request $request, Response $response){
+  
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM movimientoinventario";
+  
   $consulta = "select articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
@@ -17,7 +26,9 @@ INNER JOIN inventarioprincipal on movimientoinventario.FkInventarioP = inventari
 INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
 INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
 INNER JOIN usuario on movimientoinventario.FkUsuario = usuario.IdUsuario
-INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento";
+INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento
+LIMIT $limit
+OFFSET $offset";
 
   try {
 
@@ -28,8 +39,19 @@ INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimie
       $inventario = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
       //Exportar y mostrar JSON
-      echo json_encode($inventario);
+      if($inventario) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($inventario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -38,9 +60,9 @@ INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimie
 });
 
 //--------------------------------OBTENER MOVIMIENTOS POR ID
-$app -> get('/api/movimientos/{IdMovimientoInventario}', function(Request $request, Response $response){
+$app -> get('/api/movimientos/IdMovimientoInventario/', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdMovimientoInventario');
+  $id = $request -> getParam('IdMovimientoInventario');
 
   $consulta = "select articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
@@ -65,7 +87,11 @@ $app -> get('/api/movimientos/{IdMovimientoInventario}', function(Request $reque
       $db = null;
 
       //Exportar y mostrar JSON
-      echo json_encode($inventario);
+      if($inventario) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($inventario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -74,8 +100,17 @@ $app -> get('/api/movimientos/{IdMovimientoInventario}', function(Request $reque
 });
 
 //--------------------------------OBTENER TODOS LOS MOVIMIENTOS POR INVENTARIO PRINCIPAL
-$app -> get('/api/movimientos/inventario/principal', function(Request $request, Response $response){
+$app -> get('/api/movimientos/inventario/principal/', function(Request $request, Response $response){
 
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM movimientoinventario";
+    
   $consulta = "select articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal,
@@ -86,8 +121,9 @@ $app -> get('/api/movimientos/inventario/principal', function(Request $request, 
   INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
   INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
   INNER JOIN usuario on movimientoinventario.FkUsuario = usuario.IdUsuario
-  INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento";
-
+  INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento
+  LIMIT $limit
+  OFFSET $offset";
   try {
 
     //Instanciacion de base de datos
@@ -97,8 +133,18 @@ $app -> get('/api/movimientos/inventario/principal', function(Request $request, 
       $inventario = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
       //Exportar y mostrar JSON
-      echo json_encode($inventario);
+      if($inventario) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($inventario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -107,8 +153,15 @@ $app -> get('/api/movimientos/inventario/principal', function(Request $request, 
 });
 
 //--------------------------------OBTENER TODOS LOS MOVIMIENTOS POR INVENTARIO SECUNDARIO
-$app -> get('/api/movimientos/inventario/secundario', function(Request $request, Response $response){
-
+$app -> get('/api/movimientos/inventario/secundario/', function(Request $request, Response $response){
+  
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
   $consulta = "select articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventariosecundario.CantidadSecundario,
@@ -120,7 +173,9 @@ $app -> get('/api/movimientos/inventario/secundario', function(Request $request,
   INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
   INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
   INNER JOIN usuario on movimientoinventario.FkUsuario = usuario.IdUsuario
-  INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento";
+  INNER JOIN tipomovimiento on movimientoinventario.FkTipoMovimiento = tipomovimiento.IdTipoMovimiento
+  LIMIT $limit
+  OFFSET $offset";
 
   try {
 
@@ -131,9 +186,19 @@ $app -> get('/api/movimientos/inventario/secundario', function(Request $request,
       $inventario = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($inventario);
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
 
+      //Exportar y mostrar JSON
+      if($inventario) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($inventario, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+      
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
@@ -156,6 +221,11 @@ $consulta1 = "DELETE FROM movimientoinventario WHERE IdMovimientoInventario = '$
       $stmt -> execute();
       $db = null;
       echo '{"notice": {"text": "Registro de movimiento borrado"}';
+      if($stmt) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }

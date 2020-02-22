@@ -8,76 +8,93 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 $fkVendedorParaSubVenta;
 
-//obetener todas las notificaciones
-$app -> get('/api/notificaciones', function(Request $request, Response $response){
+//obetener todas las notificaciones PAGINATION
+/*
+Requiere>
+limit(int)
+page(int)
+*/
+$app -> get('/api/notificaciones/', function(Request $request, Response $response){
 
+
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+    
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+    
+  $count = "SELECT COUNT(*) as Total FROM `tabla_valor`";
   $consulta = "SELECT
-  `tabla_valor`.`idTablaValor`,
-  `tabla_valor`.`clave`,
-  `tabla_valor`.`descripcion1`,
-  `tabla_valor`.`dato1`,
-  `tabla_valor`.`descripcion2`,
-  `tabla_valor`.`dato2`,
-  `tabla_valor`.`descripcion3`,
-  `tabla_valor`.`dato3`,
-  `tabla_valor`.`descripcion4`,
-  `tabla_valor`.`dato4`,
-  `tabla_valor`.`descripcion5`,
-  `tabla_valor`.`dato5`,
-  `tabla_valor`.`descripcion6`,
-  `tabla_valor`.`dato6`,
-  `tabla_valor`.`descripcion7`,
-  `tabla_valor`.`dato7`,
-  `tabla_valor`.`descripcion8`,
-  `tabla_valor`.`dato8`,
-  `tabla_valor`.`descripcion9`,
-  `tabla_valor`.`dato9`,
-  `tabla_valor`.`descripcion10`,
-  `tabla_valor`.`dato10`,
-  `tabla_valor`.`descripcion11`,
-  `tabla_valor`.`dato11`,
-  `tabla_valor`.`descripcion12`,
-  `tabla_valor`.`dato12`,
-  `tabla_valor`.`descripcion13`,
-  `tabla_valor`.`dato13`,
-  `tabla_valor`.`descripcion14`,
-  `tabla_valor`.`dato14`,
-  `tabla_valor`.`descripcion15`,
-  `tabla_valor`.`dato15`,
-  `tabla_valor`.`descripcion16`,
-  `tabla_valor`.`dato16`,
-  `tabla_valor`.`descripcion17`,
-  `tabla_valor`.`dato17`,
-  `tabla_valor`.`descripcion18`,
-  `tabla_valor`.`dato18`
+  idTablaValor,
+  clave,
+  dato12,
+  descripcion13,
+  dato13,
+  descripcion14,
+  dato14,
+  descripcion15,
+  dato15,
+  descripcion16,
+  dato16,
+  descripcion17,
+  dato17,
+  descripcion18,
+  dato18
 FROM
-  `tabla_valor`";
-
-
+  tabla_valor
+  LIMIT $limit
+  OFFSET $offset";
 
   try {
 
     //Instanciacion de base de datos
       $db = new db();
-      $db = $db -> conectar();
+      $db = $db->conectar();
       $ejecutar = $db -> query($consulta);
-      $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $stmt = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
-
+      //echo json_encode($stmt);
+      
+      
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
       //Exportar y mostrar JSON
-      echo json_encode($notificaciones);
+      //echo json_encode($stmt2);
+      
+      if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+      }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    echo '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
 
 //obetener todas las notificaciones por clave
-$app -> get('/api/notificaciones/{clave}', function(Request $request, Response $response){
+/*
+limit(int)
+page(int)
+clave(string) Es la clave de la notificacion. NOTI-VENTA y NOTI-SUBVENTA
+*/
+$app -> get('/api/notificaciones/clave/', function(Request $request, Response $response){
 
-  $clave = $request -> getAttribute('clave');
-
+  $clave = $request -> getParam('clave');
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM tabla_valor WHERE clave = '$clave'";
   $consulta = "SELECT
   `tabla_valor`.`clave`,
   `tabla_valor`.`descripcion1`,
@@ -118,8 +135,8 @@ $app -> get('/api/notificaciones/{clave}', function(Request $request, Response $
   `tabla_valor`.`dato18`
 FROM
   `tabla_valor`
-  WHERE `tabla_valor`.`clave` = $clave";
-
+  WHERE `tabla_valor`.`clave` = '$clave'";
+//echo $clave;
   try {
 
     //Instanciacion de base de datos
@@ -128,204 +145,265 @@ FROM
       $ejecutar = $db -> query($consulta);
       $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
+      
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($notificaciones);
+      if($notificaciones) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($notificaciones));
+      }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
+
+
 
 //agregar notificaciones de clientes
+/*
+clave(string) - NOTI-CLIE
+Nombre(string)
+APaterno
+AMaterno
+FechaNacimiento(date) - dd/mm/aa
+Sexo(char) - M/F
+Telefono(int 10)
+Celular(int 10)
+CasaPropia(int) 1/0
+AutoPropio(int) 1/0
+LugarTrabajo(string)
+TelTrabajo(int 10)
+Antiguedad(int)
+FkDireccion(int) - Requiere la ruta de direcciones, revisarla.
+FkDireccionCobro - Requiere la ruta de direcciones, revisarla.
+Estatus 1/0 - Revisar 
+*/
 $app -> post('/api/notificaciones/agregarCliente', function(Request $request, Response $response){
 
-$clave = $request -> getParam('clave');
-$nombre = $request -> getParam('Nombre');
-$aPaterno = $request -> getParam('APaterno');
-$aMaterno = $request -> getParam('AMaterno');
-$fechaNacimiento = $request -> getParam('FechaNacimiento');
-$sexo = $request -> getParam('Sexo');
-$telefono = $request -> getParam('Telefono');
-$celular = $request -> getParam('Celular');
-$casaPropia = $request -> getParam('CasaPropia');
-$autoPropio = $request -> getParam('AutoPropio');
-$lugarTrabajo = $request -> getParam('LugarTrabajo');
-$telTrabajo = $request -> getParam('TelTrabajo');
-$antiguedad = $request -> getParam('Antiguedad');
-$fkDireccion = $request -> getParam('FkDireccion');
-$fkDireccionCobro = $request -> getParam('FkDireccionCobro');
-$estatus = $request -> getParam('Estatus');
+    $clave = $request -> getParam('clave');
+    $nombre = $request -> getParam('Nombre');
+    $aPaterno = $request -> getParam('APaterno');
+    $aMaterno = $request -> getParam('AMaterno');
+    $fechaNacimiento = $request -> getParam('FechaNacimiento');
+    $sexo = $request -> getParam('Sexo');
+    $telefono = $request -> getParam('Telefono');
+    $celular = $request -> getParam('Celular');
+    $casaPropia = $request -> getParam('CasaPropia');
+    $autoPropio = $request -> getParam('AutoPropio');
+    $lugarTrabajo = $request -> getParam('LugarTrabajo');
+    $telTrabajo = $request -> getParam('TelTrabajo');
+    $antiguedad = $request -> getParam('Antiguedad');
+    $fkDireccion = $request -> getParam('FkDireccion');
+    $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
+    $estatus = $request -> getParam('Estatus');
 
-$consulta0 = "SELECT `cliente`.`IdCliente`
-             FROM `cliente`
-             WHERE `Nombre` = '".$nombre."' AND `APaterno` = '".$aPaterno."'  AND `AMaterno` = '".$aMaterno."' AND `FechaNacimiento` = '".$fechaNacimiento."'
-              OR `Telefono` = '".$telefono."' OR `Celular` = '".$celular."'";
+    $consulta0 = "SELECT `cliente`.`IdCliente`
+                  FROM `cliente`
+                  WHERE `Nombre` = '".$nombre."' AND `APaterno` = '".$aPaterno."'  AND `AMaterno` = '".$aMaterno."' AND `FechaNacimiento` = '".$fechaNacimiento."'
+                  OR `Telefono` = '".$telefono."' OR `Celular` = '".$celular."'";
 
-              try {
-
-                //Instanciacion de base de datos
-                  $db = new db();
-                  $db = $db -> conectar();
-                  $ejecutar = $db -> query($consulta0);
-                  $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
-                  $db = null;
-                  $row_cnt = $notificaciones->num_rows;
-                  //echo json_encode($notificaciones);
-                  $json = json_encode($notificaciones);
-
-              } catch (PDOException $e) {
-                echo '{"error": {"text": '.$e -> getMessage().'}';
-              }
-
-if ($notificaciones == null) {
-  echo '{"notice": {"text": "No se encontraron coincidencias."}';
-$consulta = "INSERT INTO tabla_valor (
-            `tabla_valor`.`clave`,
-            `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
-            `tabla_valor`.`descripcion2`,  `tabla_valor`.`dato2`,
-            `tabla_valor`.`descripcion3`,  `tabla_valor`.`dato3`,
-            `tabla_valor`.`descripcion4`,  `tabla_valor`.`dato4`,
-            `tabla_valor`.`descripcion5`, `tabla_valor`.`dato5`,
-            `tabla_valor`.`descripcion6`,  `tabla_valor`.`dato6`,
-            `tabla_valor`.`descripcion7`,  `tabla_valor`.`dato7`,
-            `tabla_valor`.`descripcion8`,  `tabla_valor`.`dato8`,
-            `tabla_valor`.`descripcion9`,  `tabla_valor`.`dato9`,
-            `tabla_valor`.`descripcion10`, `tabla_valor`.`dato10`,
-            `tabla_valor`.`descripcion11`, `tabla_valor`.`dato11`,
-            `tabla_valor`.`descripcion12`, `tabla_valor`.`dato12`,
-            `tabla_valor`.`descripcion13`, `tabla_valor`.`dato13`,
-            `tabla_valor`.`descripcion14`, `tabla_valor`.`dato14`,
-            `tabla_valor`.`descripcion15`, `tabla_valor`.`dato15`)
-                values (:clave,
-                        'Nombre',:Nombre,
-                        'APaterno',:APaterno,
-                        'AMaterno',:AMaterno,
-                        'FechaNacimiento', :FechaNacimiento,
-                        'Sexo',:Sexo,
-                        'Telefono', :Telefono,
-                        'Celular', :Celular,
-                        'CasaPropia', :CasaPropia,
-                        'AutoPropio', :AutoPropio,
-                        'LugarTrabajo', :LugarTrabajo,
-                        'TelTrabajo',:TelTrabajo,
-                        'Antiguedad',:Antiguedad,
-                        'FkDireccion', :FkDireccion,
-                        'FkDireccionCobro', :FkDireccionCobro,
-                        'Estatus', :Estatus)";
-
-  try {
+    try {
 
     //Instanciacion de base de datos
-      $db = new db();
-      $db = $db -> conectar();
-      $stmt = $db -> prepare($consulta);
-      $stmt -> bindParam(':clave', $clave);
-      $stmt -> bindParam(':Nombre', $nombre);
-      $stmt -> bindParam(':APaterno', $aPaterno);
-      $stmt -> bindParam(':AMaterno', $aMaterno);
-      $stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
-      $stmt -> bindParam(':Sexo', $sexo);
-      $stmt -> bindParam(':Telefono', $telefono);
-      $stmt -> bindParam(':Celular', $celular);
-      $stmt -> bindParam(':CasaPropia', $casaPropia);
-      $stmt -> bindParam(':AutoPropio', $autoPropio);
-      $stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
-      $stmt -> bindParam(':TelTrabajo', $telTrabajo);
-      $stmt -> bindParam(':Antiguedad', $antiguedad);
-      $stmt -> bindParam(':FkDireccion', $fkDireccion);
-      $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
-      $stmt -> bindParam(':Estatus', $estatus);
-      $stmt -> execute();
-      echo '{"notice": {"text": "Cliente agregado"}';
-      //Exportar y mostrar JSON
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta0);
+    $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
+    $row_cnt = $notificaciones->num_rows;
+    //echo json_encode($notificaciones);
+    $json = json_encode($notificaciones);
 
-  } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
-  }
-} else{
-  echo '{"notice": {"text": se encontraron coincidencias = "'.$json.'"}';
-  $coincidencia = '1';
-  $consulta = ("INSERT INTO tabla_valor (
-    `tabla_valor`.`clave`,
-    `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
-    `tabla_valor`.`descripcion2`,  `tabla_valor`.`dato2`,
-    `tabla_valor`.`descripcion3`,  `tabla_valor`.`dato3`,
-    `tabla_valor`.`descripcion4`,  `tabla_valor`.`dato4`,
-    `tabla_valor`.`descripcion5`, `tabla_valor`.`dato5`,
-    `tabla_valor`.`descripcion6`,  `tabla_valor`.`dato6`,
-    `tabla_valor`.`descripcion7`,  `tabla_valor`.`dato7`,
-    `tabla_valor`.`descripcion8`,  `tabla_valor`.`dato8`,
-    `tabla_valor`.`descripcion9`,  `tabla_valor`.`dato9`,
-    `tabla_valor`.`descripcion10`, `tabla_valor`.`dato10`,
-    `tabla_valor`.`descripcion11`, `tabla_valor`.`dato11`,
-    `tabla_valor`.`descripcion12`, `tabla_valor`.`dato12`,
-    `tabla_valor`.`descripcion13`, `tabla_valor`.`dato13`,
-    `tabla_valor`.`descripcion14`, `tabla_valor`.`dato14`,
-    `tabla_valor`.`descripcion15`, `tabla_valor`.`dato15`,
-    `tabla_valor`.`descripcion16`, `tabla_valor`.`dato16`,
-    `tabla_valor`.`descripcion17`, `tabla_valor`.`dato17`)
-        values (:clave,
-                'Nombre',:Nombre,
-                'APaterno',:APaterno,
-                'AMaterno',:AMaterno,
-                'FechaNacimiento', :FechaNacimiento,
-                'Sexo',:Sexo,
-                'Telefono', :Telefono,
-                'Celular', :Celular,
-                'CasaPropia', :CasaPropia,
-                'AutoPropio', :AutoPropio,
-                'LugarTrabajo', :LugarTrabajo,
-                'TelTrabajo',:TelTrabajo,
-                'Antiguedad',:Antiguedad,
-                'FkDireccion', :FkDireccion,
-                'FkDireccionCobro', :FkDireccionCobro,
-                'Estatus', :Estatus,
-                'Coincidencias', :Coincidencias,
-                'IdCliente', :IdCliente)");
+    } catch (PDOException $e) {
+        return '{"error": {"text": '.$e -> getMessage().'} }';
+    }
 
-
-try {
-
-$decode=json_decode($json, true);
-$idCliente = $decode[0]['IdCliente'];
-//Instanciacion de base de datos
-$db = new db();
-$db = $db -> conectar();
-$stmt = $db -> prepare($consulta);
-$stmt -> bindParam(':clave', $clave);
-$stmt -> bindParam(':Nombre', $nombre);
-$stmt -> bindParam(':APaterno', $aPaterno);
-$stmt -> bindParam(':AMaterno', $aMaterno);
-$stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
-$stmt -> bindParam(':Sexo', $sexo);
-$stmt -> bindParam(':Telefono', $telefono);
-$stmt -> bindParam(':Celular', $celular);
-$stmt -> bindParam(':CasaPropia', $casaPropia);
-$stmt -> bindParam(':AutoPropio', $autoPropio);
-$stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
-$stmt -> bindParam(':TelTrabajo', $telTrabajo);
-$stmt -> bindParam(':Antiguedad', $antiguedad);
-$stmt -> bindParam(':FkDireccion', $fkDireccion);
-$stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
-$stmt -> bindParam(':Estatus', $estatus);
-$stmt -> bindParam(':Coincidencias', $coincidencia);
-$stmt -> bindParam(':IdCliente', $idCliente);
-$stmt -> execute();
-echo '{"notice": {"text": "Cliente agregado"}';
-//Exportar y mostrar JSON
-
-} catch (PDOException $e) {
-echo '{"error": {"text": '.$e -> getMessage().'}';
-}
-}
+    if ($notificaciones == null) {
+        //echo '{"notice": {"text": "No se encontraron coincidencias."}';
+        $consulta = "INSERT INTO tabla_valor (
+                    `tabla_valor`.`clave`,
+                    `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
+                    `tabla_valor`.`descripcion2`,  `tabla_valor`.`dato2`,
+                    `tabla_valor`.`descripcion3`,  `tabla_valor`.`dato3`,
+                    `tabla_valor`.`descripcion4`,  `tabla_valor`.`dato4`,
+                    `tabla_valor`.`descripcion5`, `tabla_valor`.`dato5`,
+                    `tabla_valor`.`descripcion6`,  `tabla_valor`.`dato6`,
+                    `tabla_valor`.`descripcion7`,  `tabla_valor`.`dato7`,
+                    `tabla_valor`.`descripcion8`,  `tabla_valor`.`dato8`,
+                    `tabla_valor`.`descripcion9`,  `tabla_valor`.`dato9`,
+                    `tabla_valor`.`descripcion10`, `tabla_valor`.`dato10`,
+                    `tabla_valor`.`descripcion11`, `tabla_valor`.`dato11`,
+                    `tabla_valor`.`descripcion12`, `tabla_valor`.`dato12`,
+                    `tabla_valor`.`descripcion13`, `tabla_valor`.`dato13`,
+                    `tabla_valor`.`descripcion14`, `tabla_valor`.`dato14`,
+                    `tabla_valor`.`descripcion15`, `tabla_valor`.`dato15`)
+                        values (:clave,
+                                'Nombre',:Nombre,
+                                'APaterno',:APaterno,
+                                'AMaterno',:AMaterno,
+                                'FechaNacimiento', :FechaNacimiento,
+                                'Sexo',:Sexo,
+                                'Telefono', :Telefono,
+                                'Celular', :Celular,
+                                'CasaPropia', :CasaPropia,
+                                'AutoPropio', :AutoPropio,
+                                'LugarTrabajo', :LugarTrabajo,
+                                'TelTrabajo',:TelTrabajo,
+                                'Antiguedad',:Antiguedad,
+                                'FkDireccion', :FkDireccion,
+                                'FkDireccionCobro', :FkDireccionCobro,
+                                'Estatus', :Estatus)";
+    
+        try {
+    
+            //Instanciacion de base de datos
+            $db = new db();
+            $db = $db -> conectar();
+            $stmt = $db -> prepare($consulta);
+            $stmt -> bindParam(':clave', $clave);
+            $stmt -> bindParam(':Nombre', $nombre);
+            $stmt -> bindParam(':APaterno', $aPaterno);
+            $stmt -> bindParam(':AMaterno', $aMaterno);
+            $stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
+            $stmt -> bindParam(':Sexo', $sexo);
+            $stmt -> bindParam(':Telefono', $telefono);
+            $stmt -> bindParam(':Celular', $celular);
+            $stmt -> bindParam(':CasaPropia', $casaPropia);
+            $stmt -> bindParam(':AutoPropio', $autoPropio);
+            $stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
+            $stmt -> bindParam(':TelTrabajo', $telTrabajo);
+            $stmt -> bindParam(':Antiguedad', $antiguedad);
+            $stmt -> bindParam(':FkDireccion', $fkDireccion);
+            $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
+            $stmt -> bindParam(':Estatus', $estatus);
+            $stmt -> execute();
+          
+            //echo '{"notice": {"text": "Cliente agregado"}';
+          
+        if($stmt) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write('{"notice": {"text": "Cliente agregado"}');
+        }
+         
+    
+        } catch (PDOException $e) {
+            return '{"error": {"text": '.$e -> getMessage().'} }';
+        }
+    } else{
+        //echo '{"notice": {"text": se encontraron coincidencias = "'.$json.'"}';
+        $coincidencia = '1';
+        $consulta = ("INSERT INTO tabla_valor (
+                                `tabla_valor`.`clave`,
+                                `tabla_valor`.`descripcion1`,  `tabla_valor`.`dato1`,
+                                `tabla_valor`.`descripcion2`,  `tabla_valor`.`dato2`,
+                                `tabla_valor`.`descripcion3`,  `tabla_valor`.`dato3`,
+                                `tabla_valor`.`descripcion4`,  `tabla_valor`.`dato4`,
+                                `tabla_valor`.`descripcion5`, `tabla_valor`.`dato5`,
+                                `tabla_valor`.`descripcion6`,  `tabla_valor`.`dato6`,
+                                `tabla_valor`.`descripcion7`,  `tabla_valor`.`dato7`,
+                                `tabla_valor`.`descripcion8`,  `tabla_valor`.`dato8`,
+                                `tabla_valor`.`descripcion9`,  `tabla_valor`.`dato9`,
+                                `tabla_valor`.`descripcion10`, `tabla_valor`.`dato10`,
+                                `tabla_valor`.`descripcion11`, `tabla_valor`.`dato11`,
+                                `tabla_valor`.`descripcion12`, `tabla_valor`.`dato12`,
+                                `tabla_valor`.`descripcion13`, `tabla_valor`.`dato13`,
+                                `tabla_valor`.`descripcion14`, `tabla_valor`.`dato14`,
+                                `tabla_valor`.`descripcion15`, `tabla_valor`.`dato15`,
+                                `tabla_valor`.`descripcion16`, `tabla_valor`.`dato16`,
+                                `tabla_valor`.`descripcion17`, `tabla_valor`.`dato17`)
+                                    values (:clave,
+                                            'Nombre',:Nombre,
+                                            'APaterno',:APaterno,
+                                            'AMaterno',:AMaterno,
+                                            'FechaNacimiento', :FechaNacimiento,
+                                            'Sexo',:Sexo,
+                                            'Telefono', :Telefono,
+                                            'Celular', :Celular,
+                                            'CasaPropia', :CasaPropia,
+                                            'AutoPropio', :AutoPropio,
+                                            'LugarTrabajo', :LugarTrabajo,
+                                            'TelTrabajo',:TelTrabajo,
+                                            'Antiguedad',:Antiguedad,
+                                            'FkDireccion', :FkDireccion,
+                                            'FkDireccionCobro', :FkDireccionCobro,
+                                            'Estatus', :Estatus,
+                                            'Coincidencias', :Coincidencias,
+                                            'IdCliente', :IdCliente)");
+    
+    
+        try {
+        
+            $decode = json_decode($json, true);
+            $idCliente = $decode[0]['IdCliente'];
+            //Instanciacion de base de datos
+            $db = new db();
+            $db = $db -> conectar();
+            $stmt = $db -> prepare($consulta);
+            $stmt -> bindParam(':clave', $clave);
+            $stmt -> bindParam(':Nombre', $nombre);
+            $stmt -> bindParam(':APaterno', $aPaterno);
+            $stmt -> bindParam(':AMaterno', $aMaterno);
+            $stmt -> bindParam(':FechaNacimiento', $fechaNacimiento);
+            $stmt -> bindParam(':Sexo', $sexo);
+            $stmt -> bindParam(':Telefono', $telefono);
+            $stmt -> bindParam(':Celular', $celular);
+            $stmt -> bindParam(':CasaPropia', $casaPropia);
+            $stmt -> bindParam(':AutoPropio', $autoPropio);
+            $stmt -> bindParam(':LugarTrabajo', $lugarTrabajo);
+            $stmt -> bindParam(':TelTrabajo', $telTrabajo);
+            $stmt -> bindParam(':Antiguedad', $antiguedad);
+            $stmt -> bindParam(':FkDireccion', $fkDireccion);
+            $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
+            $stmt -> bindParam(':Estatus', $estatus);
+            $stmt -> bindParam(':Coincidencias', $coincidencia);
+            $stmt -> bindParam(':IdCliente', $idCliente);
+            $stmt -> execute();
+        
+        
+            if($notificaciones) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write('{"notice": {"text": "Cliente agregado"} }');
+            }
+        
+        
+        } catch (PDOException $e) {
+            return '{"error": {"text": '.$e -> getMessage().'} }';
+        }
+    }
 });
 
-//Actualizar notificaciones de clientes
-$app -> put('/api/notificaciones/actualizar/{idTablaValor}', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('idTablaValor');
+//Actualizar notificaciones de clientes
+/*
+clave(string) - NOTI-CLIE
+Nombre(string)
+APaterno
+AMaterno
+FechaNacimiento(date) - dd/mm/aa
+Sexo(char) - M/F
+Telefono(int 10)
+Celular(int 10)
+CasaPropia(int) 1/0
+AutoPropio(int) 1/0
+LugarTrabajo(string)
+TelTrabajo(int 10)
+Antiguedad(int)
+FkDireccion(int) - Requiere la ruta de direcciones, revisarla.
+FkDireccionCobro - Requiere la ruta de direcciones, revisarla.
+Estatus 1/0 - Revisar 
+*/
+$app -> put('/api/notificaciones/actualizar/{idNotificaciones}', function(Request $request, Response $response){
+
+  $idNotificaciones = $request -> getAttribute('idTablaValor');
   $nombre = $request -> getParam('Nombre');
   $aPaterno = $request -> getParam('APaterno');
   $aMaterno = $request -> getParam('AMaterno');
@@ -341,8 +419,6 @@ $app -> put('/api/notificaciones/actualizar/{idTablaValor}', function(Request $r
   $fkDireccion = $request -> getParam('FkDireccion');
   $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
   $estatus = $request -> getParam('Estatus');
-
-
 
   $consulta = "UPDATE  tabla_valor SET
   `tabla_valor`.`dato1` =                       :Nombre,
@@ -363,7 +439,7 @@ $app -> put('/api/notificaciones/actualizar/{idTablaValor}', function(Request $r
   `tabla_valor`.`dato16` =                         null,
   `tabla_valor`.`dato17` =                         null,
   `tabla_valor`.`dato18` =                         null
-  WHERE idTablaValor = $id";
+  WHERE idTablaValor = $idNotificaciones";
 
   try {
 
@@ -387,11 +463,15 @@ $app -> put('/api/notificaciones/actualizar/{idTablaValor}', function(Request $r
       $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
       $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "notificación actualizado"}';
-      //Exportar y mostrar JSON
+      
+        if($stmt) {
+            return $response->withStatus(201)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($stmt));
+        }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 
@@ -402,8 +482,6 @@ $app -> put('/api/notificaciones/actualizarEstatus/{idTablaValor}', function(Req
 
   $id = $request -> getAttribute('idTablaValor');
   $estatus = $request -> getParam('Estatus');
-
-
 
   $consulta = "UPDATE  tabla_valor SET
   `tabla_valor`.`dato15` =                     :Estatus
@@ -417,13 +495,16 @@ $app -> put('/api/notificaciones/actualizarEstatus/{idTablaValor}', function(Req
       $stmt = $db -> prepare($consulta);
       $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "notificación actualizado"}';
-      //Exportar y mostrar JSON
+      
+        if($stmt) {
+            return $response->withStatus(201)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($stmt));
+        }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
-
 
 });
 
@@ -442,9 +523,14 @@ $id = $request -> getAttribute('idTablaValor');
       $stmt = $db -> query($consulta);
       $stmt -> execute();
       $db = null;
-      echo '{"notice": {"text": "Notificación borrada"}';
+      
+      if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+      }
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 
@@ -467,7 +553,7 @@ $app->post('/api/notificaciones/ventas/agregar', function (Request $request, Res
   $json = $request->getParsedBody();
   
   foreach ($json as $notificacion) {
-    echo($notificacion["tipo_notificacion"]);
+    //echo($notificacion["tipo_notificacion"]);
     if ($notificacion["tipo_notificacion"] == "venta"){
       echo 'FkCuenta: ' . ($notificacion["datos"]["FkCuenta"]);
       echo 'TotalVenta: ' . ($notificacion["datos"]["TotalVenta"]);
@@ -556,19 +642,22 @@ function insert_tabla_valor_venta ($clave,$fkCuenta,$totalVenta,$enganche,$fkVen
                               $stmt->bindParam(':gpsLon', $gpsLon);
                         
                               $stmt->execute();
-                              echo '{"notice": {"text": "Venta aprobada"}';
-                              //Exportar y mostrar JSON
+                              
+                                if($stmt) {
+                                    return $response->withStatus(200)
+                                        ->withHeader('Content-Type', 'application/json')
+                                        ->write(json_encode($stmt));
+                                }
                         
                           } catch (PDOException $e) {
-                              echo '{"error": {"text": ' . $e->getMessage() . '}';
+                              return '{"error": {"text": ' . $e->getMessage() . '}';
                           }
            
 }
 
 function consulta_ultima_venta_de_vendedor_tabla_valor($FkVendedor){
     
-    echo '\n
-         {"$FkVendedor": {" --> ": '.$FkVendedor.'}'; 
+   //echo '\n {"$FkVendedor": {" --> ": '.$FkVendedor.'}'; 
     
     $consulta = "SELECT idTablaValor 
                         FROM tabla_valor 
@@ -585,26 +674,26 @@ function consulta_ultima_venta_de_vendedor_tabla_valor($FkVendedor){
                               $ejecutar = $db -> query($consulta);
                               $stmt = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
                               $db = null;
-                              echo '\n
-                              {"notice": {"text": "Venta aprobada"}';
+                              //echo '\n {"notice": {"text": "Venta aprobada"}';
                               
                               //Exportar y mostrar JSON
                               $encode = json_encode($stmt);
-                              echo '\n
-                              {"$encode": {" --> ": ' . $encode . '}';
+                              //echo '\n {"$encode": {" --> ": ' . $encode . '}';
                               
                               $decode = json_decode($encode ,true);
-                              echo '\n
-                              {"$decode": {" --> ": ' . $decode . '}';
+                              //echo '\n {"$decode": {" --> ": ' . $decode . '}';
                               
                               $idTablaValorDelVendedor = $decode[0]['idTablaValor'];
-                              echo '\n
-                              {"$idTablaValorDelVendedor": {" --> ": ' . $idTablaValorDelVendedor . '}';
+                             // echo '\n {"$idTablaValorDelVendedor": {" --> ": ' . $idTablaValorDelVendedor . '}';
                               
-                              return $idTablaValorDelVendedor;
+                                if($stmt) {
+                                    return $response->withStatus(200)
+                                        ->withHeader('Content-Type', 'application/json')
+                                        ->write(json_encode($idTablaValorDelVendedor));
+                                }
                         
                           } catch (PDOException $e) {
-                              echo '{"error": {"text": ' . $e->getMessage() . '}';
+                              return '{"error": {"text": ' . $e->getMessage() . '} }';
                           }
 }
 
@@ -640,11 +729,15 @@ function insert_tabla_valor_subventa ($clave, $FkArticulo, $Cantidad, $SubTotal,
                               
 
                               $stmt->execute();
-                              echo '{"notice": {"text": "Venta aprobada"}';
-                              //Exportar y mostrar JSON
+                              
+                              if($stmt) {
+                                    return $response->withStatus(200)
+                                        ->withHeader('Content-Type', 'application/json')
+                                        ->write(json_encode($idTablaValorDelVendedor));
+                                }
                         
                           } catch (PDOException $e) {
-                              echo '{"error": {"text": ' . $e->getMessage() . '}';
+                              return '{"error": {"text": ' . $e->getMessage() . '}';
                           }
            
 }
@@ -676,11 +769,16 @@ function update_tabla_valor_subventa (){
                               $stmt->bindParam(':FkVenta', $FkVenta);
                         
                               $stmt->execute();
-                              echo '{"notice": {"text": "Venta aprobada"}';
-                              //Exportar y mostrar JSON
+                              
+                              if($stmt) {
+                                    return $response->withStatus(200)
+                                        ->withHeader('Content-Type', 'application/json')
+                                        ->write(json_encode($stmt));
+                                }
+                              
                         
                           } catch (PDOException $e) {
-                              echo '{"error": {"text": ' . $e->getMessage() . '}';
+                              return '{"error": {"text": ' . $e->getMessage() . '}';
                           }
            
 }
@@ -705,11 +803,15 @@ $app->put('/api/notificaciones/ventas/aprobar/{idTablaValor}', function (Request
       $stmt->bindParam(':idTablaValor', $idTablaValor);
 
       $stmt->execute();
-      echo '{"notice": {"text": "Venta aprobada"}';
-      //Exportar y mostrar JSON
+      
+        if($stmt) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($stmt));
+        }
 
   } catch (PDOException $e) {
-      echo '{"error": {"text": ' . $e->getMessage() . '}';
+      return '{"error": {"text": ' . $e->getMessage() . '}';
   }
 
 });
@@ -738,21 +840,31 @@ $app -> post('/api/notificaciones/venta/completar', function(Request $request, R
     $stmt->bindParam(':idTablaValor', $idTablaValor);
 
     $stmt->execute();
-    echo '{"notice": {"text": "Venta agregada a tabla venta" ' . $numRows . '}';
-    //Exportar y mostrar JSON
+
+    if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+    }
 
 } catch (PDOException $e) {
-    echo '{"error": {"text": ' . $e->getMessage() . '}';
+    return '{"error": {"text": ' . $e->getMessage() . '}';
 }
   
 });
 
-
-
 //obetener notificaciones de venta por estatus
-$app -> get('/api/notificaciones/ventas/Estatus/{estatus}', function(Request $request, Response $response){
+$app -> get('/api/notificaciones/ventas/estatus', function(Request $request, Response $response){
 
-  $estatus = $request -> getAttribute('estatus');
+  $estatus = $request -> getParam('estatus');
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM tabla_valor WHERE tabla_valor.dato14 = '$estatus'";
 
   $consulta = "SELECT
     tabla_valor.idTablaValor,
@@ -788,7 +900,7 @@ $app -> get('/api/notificaciones/ventas/Estatus/{estatus}', function(Request $re
   FROM
     tabla_valor
   WHERE
-    tabla_valor.dato14 = $estatus";
+    tabla_valor.dato14 = '$estatus'";
 
   try {
 
@@ -799,19 +911,29 @@ $app -> get('/api/notificaciones/ventas/Estatus/{estatus}', function(Request $re
       $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($notificaciones);
+      $db = new db();
+      $db = $db->conectar();
+      $ejecutar1 = $db -> query($count);
+      $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+    
+    if($notificaciones) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($notificaciones));
+    }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
 
 //obetener notificaciones de venta por estatus
-$app -> get('/api/notificaciones/ventas/EstatusId/{idTablaValor}', function(Request $request, Response $response){
+$app -> get('/api/notificaciones/ventas/EstatusId/', function(Request $request, Response $response){
 
-  $idTablaValor = $request -> getAttribute('idTablaValor');
+      $idTablaValor = $request -> getParam('idTablaValor');
 
   $consulta = "SELECT
     tabla_valor.idTablaValor,
@@ -847,7 +969,7 @@ $app -> get('/api/notificaciones/ventas/EstatusId/{idTablaValor}', function(Requ
   FROM
     tabla_valor
   WHERE
-    tabla_valor.idTablaValor = $idTablaValor and tabla_valor.clave = 'NOTI-VENT'";
+    tabla_valor.idTablaValor = $idTablaValor and tabla_valor.clave = 'NOTI-VENTA'";
 
   try {
 
@@ -858,11 +980,14 @@ $app -> get('/api/notificaciones/ventas/EstatusId/{idTablaValor}', function(Requ
       $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
       $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($notificaciones);
+    if($notificaciones) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($notificaciones));
+    }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    return '{"error": {"text": '.$e -> getMessage().'} }';
   }
 
 });
@@ -928,11 +1053,15 @@ $app->put('/api/notificaciones/ventas/actualizar/{idTablaValor}', function (Requ
         $stmt->bindParam(':EstatusAprobacion', $estatusAprobacion);
 
         $stmt->execute();
-        echo '{"notice": {"text": "notificación de venta actualizado"}';
-        //Exportar y mostrar JSON
+        
+    if($notificaciones) {
+        return $response->withStatus(201)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($notificaciones));
+    }
 
     } catch (PDOException $e) {
-        echo '{"error": {"text": ' . $e->getMessage() . '}';
+        return '{"error": {"text": ' . $e->getMessage() . '}';
     }
 
 });
@@ -956,9 +1085,15 @@ $app->delete('/api/notificaciones/ventas/eliminar/{idTablaValor}', function (Req
 
         $stmt->execute();
         $db = null;
-        echo '{"notice": {"text": "Notificación de venta borrada"}';
+        
+    if($stmt) {
+        return $response->withStatus(200)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+    }
+        
     } catch (PDOException $e) {
-        echo '{"error": {"text": ' . $e->getMessage() . '}';
+        return '{"error": {"text": ' . $e->getMessage() . '}';
     }
 
 });
@@ -985,11 +1120,15 @@ $app->put('/api/notificaciones/ventas/actualizar/subventa/', function (Request $
       $stmt->bindParam(':FkVenta', $FkVenta);
 
       $stmt->execute();
-      echo '{"notice": {"text": "Update realizado de subventa"}';
-      //Exportar y mostrar JSON
+    
+    if($stmt) {
+        return $response->withStatus(201)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($stmt));
+    }
 
   } catch (PDOException $e) {
-      echo '{"error": {"text": ' . $e->getMessage() . '}';
+      return '{"error": {"text": ' . $e->getMessage() . '}';
   }
 
 });
@@ -1006,8 +1145,13 @@ $app->post('/api/notificaciones/subventa/agregar/', function (Request $request, 
       echo 'Enganche: ' . ($notificacion["SubTotal"]);
       echo 'FkVendedor: ' . ($notificacion["FkVenta"]);
       
-      insert_subventa_desde_tabla_valor( $notificacion["FkArticulo"], $notificacion["Cantidad"], $notificacion["SubTotal"], $notificacion["FkVenta"] );
-        
+      $respuesta = insert_subventa_desde_tabla_valor( $notificacion["FkArticulo"], $notificacion["Cantidad"], $notificacion["SubTotal"], $notificacion["FkVenta"] );
+      
+        if($stmt) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write($respuesta);
+        }
   }
   
 
@@ -1032,21 +1176,26 @@ function insert_subventa_desde_tabla_valor ($FkArticulo, $Cantidad, $SubTotal, $
                               $stmt->bindParam(':FkVenta', $FkVenta);
                         
                               $stmt->execute();
-                              echo '{"notice": {"text": "Venta aprobada"}';
+    
+                              return '{"notice": {"text": "Venta aprobada"} }';
                               //Exportar y mostrar JSON
                         
                           } catch (PDOException $e) {
-                              echo '{"error": {"text": ' . $e->getMessage() . '}';
+                              return '{"error": {"text": ' . $e->getMessage() . '}';
                           }
            
 }
 
 
 
-//obetener notificaciones de vendedor por id.
-$app -> get('/api/notificaciones/ventas/{IdVendedor}', function(Request $request, Response $response){
 
-  $fKVendedor = $request -> getAttribute('IdVendedor');
+/*
+//-- obetener notificaciones de vendedor por id.
+Requiere IdVendedor(int) desde tabla valor, osea, requiere IdVendedor desde notificaciones.
+*/
+$app -> get('/api/notificaciones/ventas/', function(Request $request, Response $response){
+
+  $IdVendedor = $request -> getParam('IdNotificacion');
 
   $consulta = "SELECT
     tabla_valor.idTablaValor,
@@ -1083,23 +1232,27 @@ $app -> get('/api/notificaciones/ventas/{IdVendedor}', function(Request $request
     tabla_valor
   WHERE
     tabla_valor.clave = 'NOTI-VENTA'
-    tabla_valor.dato5 = $fKVendedor";
+  AND tabla_valor.dato5 = $IdVendedor";
 
-  try {
+try {
 
-    //Instanciacion de base de datos
-      $db = new db();
-      $db = $db -> conectar();
-      $ejecutar = $db -> query($consulta);
-      $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
-      $db = null;
+  //Instanciacion de base de datos
+    $db = new db();
+    $db = $db -> conectar();
+    $ejecutar = $db -> query($consulta);
+    $notificaciones = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+    $db = null;
 
-      //Exportar y mostrar JSON
-      echo json_encode($notificaciones);
+    if($notificaciones) {
+        return $response->withStatus(201)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($notificaciones));
+    }
+    
 
-  } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
-  }
+} catch (PDOException $e) {
+  return '{"error": {"text": '.$e -> getMessage().'} }';
+}
 
 });
 
@@ -1107,38 +1260,14 @@ $app -> get('/api/notificaciones/ventas/{IdVendedor}', function(Request $request
 $app->put('/api/notificaciones/ventas/rechazar/{idTablaValor}', function (Request $request, Response $response) {
 
   $idTablaValor = $request->getAttribute('idTablaValor');
-  $fkCuenta = $request->getParam('FkCuenta');
-  $totalVenta = $request->getParam('TotalVenta');
-  $enganche = $request->getParam('Enganche');
-  $fecha = $request->getParam('Fecha');
-  $fkVendedor = $request->getParam('FkVendedor');
-  $periodoPago = $request->getParam('PeriodoPago');
-  $cantidadAbono = $request->getParam('CantidadAbono');
-  $saldoPendiente = $request->getParam('SaldoPendiente');
-  $horarioCobro = $request->getParam('HorarioCobro');
-  $tipoVenta = $request->getParam('TipoVenta');
-  $gpsLat = $request->getParam('GpsLat');
-  $gpsLon = $request->getParam('GpsLon');
-
   $razonRechazo = $request->getParam('razonRechazo');
 
+
   $consulta = "UPDATE  tabla_valor SET
-                  dato1 = :FkCuenta,
-                  dato2 = :TotalVenta,
-                  dato3 = :Enganche,
-                  dato4 = :Fecha,
-                  dato5 = :FkVendedor,
-                  dato6 = :PeriodoPago,
-                  dato7 = :CantidadAbono,
-                  dato8 = :SaldoPendiente,
-                  dato9 = :HorarioCobro,
-                  dato10 = :TipoVenta,
-                  dato11 = :GpsLat,
-                  dato12 = :GpsLon,
-                  dato13 = 3,
-                  dato14 = :razonRechazo
-              WHERE idTablaValor = $idTablaValor AND 
-                    clave = 'NOTI-VENTA'";
+                      dato13 = 3,
+                      dato14 = :razonRechazo
+                  WHERE idTablaValor = $idTablaValor AND 
+                        clave = 'NOTI-VENTA'";
 
   try {
 
@@ -1147,26 +1276,18 @@ $app->put('/api/notificaciones/ventas/rechazar/{idTablaValor}', function (Reques
       $db = $db->conectar();
       $stmt = $db->prepare($consulta);
 
-      $stmt->bindParam(':FkCuenta', $fkCuenta);
-      $stmt->bindParam(':TotalVenta', $totalVenta);
-      $stmt->bindParam(':Enganche', $enganche);
-      $stmt->bindParam(':Fecha', $fecha);
-      $stmt->bindParam(':FkVendedor', $fkVendedor);
-      $stmt->bindParam(':PeriodoPago', $periodoPago);
-      $stmt->bindParam(':CantidadAbono', $cantidadAbono);
-      $stmt->bindParam(':SaldoPendiente', $saldoPendiente);
-      $stmt->bindParam(':HorarioCobro', $horarioCobro);
-      $stmt->bindParam(':TipoVenta', $tipoVenta);
-      $stmt->bindParam(':GpsLat', $gpsLat);
-      $stmt->bindParam(':GpsLon', $gpsLon);
       $stmt->bindParam(':razonRechazo', $razonRechazo);
 
       $stmt->execute();
-      echo '{"notice": {"text": "Venta Rechazada"}';
-      //Exportar y mostrar JSON
+      
+      if($stmt) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write($stmt);
+        }
 
   } catch (PDOException $e) {
-      echo '{"error": {"text": ' . $e->getMessage() . '}';
+      return '{"error": {"text": ' . $e->getMessage() . '}';
   }
 
 });

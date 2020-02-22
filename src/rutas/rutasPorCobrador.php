@@ -42,9 +42,17 @@ $app->post('/api/rutaCobrador/agregarRelacion', function (Request $request, Resp
 });
 
 //Cobradores por ruta
-$app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request $request, Response $response) {
+$app->get('/api/rutaCobrador/cobradoresPorRuta/NumeroRuta/', function (Request $request, Response $response) {
 
-    $NumeroRuta = $request->getAttribute('NumeroRuta');
+    $NumeroRuta = $request->getParam('NumeroRuta');
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $count = "SELECT COUNT(*) as Total FROM ruta_cobrador WHERE ruta_cobrador.fkRuta = $NumeroRuta";
 
     $consulta = "SELECT
                 ruta_cobrador.fkRuta,
@@ -56,7 +64,9 @@ $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request 
                 ruta_cobrador
                 INNER JOIN usuario ON ruta_cobrador.fkUsuario = usuario.IdUsuario
                 INNER JOIN ruta ON ruta_cobrador.fkRuta = ruta.IdRuta
-                where ruta_cobrador.fkRuta = $NumeroRuta";
+                WHERE ruta_cobrador.fkRuta = $NumeroRuta
+                LIMIT $limit
+                OFFSET $offset";
 
     try {
 
@@ -66,7 +76,19 @@ $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request 
         $resultado = $ejecutar->fetchAll(PDO::FETCH_OBJ);
         $db = null;
 
-        echo json_encode($resultado);
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar1 = $db -> query($count);
+        $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+      //Exportar y mostrar JSON
+       if($resultado) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+
         
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';
@@ -75,8 +97,19 @@ $app->get('/api/rutaCobrador/cobradoresPorRuta/{NumeroRuta}', function (Request 
 });
 
 //Cobradores SIN ruta asiganada
-$app->get('/api/rutaCobrador/cobradoresSinRuta', function (Request $request, Response $response) {
-
+$app->get('/api/rutaCobrador/cobradoresSinRuta/', function (Request $request, Response $response) {
+    
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+  
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+  
+    $count = "SELECT COUNT(*) as Total FROM usuario WHERE usuario.IdUsuario NOT IN (SELECT ruta_cobrador.fkUsuario
+    FROM ruta_cobrador) AND
+    usuario.FkCat_TipoUsuario = 2";
+  
     $consulta = "SELECT
                 usuario.IdUsuario,
                 usuario.Nombre,
@@ -86,7 +119,9 @@ $app->get('/api/rutaCobrador/cobradoresSinRuta', function (Request $request, Res
                 usuario
                 WHERE usuario.IdUsuario NOT IN (SELECT ruta_cobrador.fkUsuario
                                                 FROM ruta_cobrador) AND
-                usuario.FkCat_TipoUsuario = 2";
+                usuario.FkCat_TipoUsuario = 2
+                LIMIT $limit
+                OFFSET $offset";
 
     try {
 
@@ -96,7 +131,19 @@ $app->get('/api/rutaCobrador/cobradoresSinRuta', function (Request $request, Res
         $resultado = $ejecutar->fetchAll(PDO::FETCH_OBJ);
         $db = null;
 
-        echo json_encode($resultado);
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar1 = $db -> query($count);
+        $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+      //Exportar y mostrar JSON
+        if($resultado) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+
 
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';
@@ -122,6 +169,11 @@ $app->delete('/api/rutaCobrador/desasignarCobrador/{fkUsuario}', function (Reque
         $db = null;
 
         echo '{"notice": {"text": "Ruta desasignada satisfactoriamente."}';
+        if($resultado) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';
@@ -131,7 +183,17 @@ $app->delete('/api/rutaCobrador/desasignarCobrador/{fkUsuario}', function (Reque
 
 //Todas las rutas con todos sus cobradores, ordenados por ruta.
 $app->get('/api/rutaCobrador/todos/', function (Request $request, Response $response) {
-
+    
+    $limit = $request -> getParam('limit');
+    $page = $request -> getParam('page');
+  
+    $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+    $limit = isset( $limit ) ? $limit : 10;
+    $offset = (--$pageReal) * $limit;
+  
+    $count = "SELECT COUNT(*) as Total FROM ruta_cobrador WHERE usuario.FkCat_TipoUsuario = 2
+                ORDER BY ruta.NumeroRuta DESC";
+    
     $consulta = "SELECT
                 ruta_cobrador.fkRuta,
                 ruta.NumeroRuta,
@@ -143,7 +205,9 @@ $app->get('/api/rutaCobrador/todos/', function (Request $request, Response $resp
                 INNER JOIN ruta ON ruta_cobrador.fkRuta = ruta.IdRuta
                 INNER JOIN usuario ON ruta_cobrador.fkUsuario = usuario.IdUsuario
                 WHERE usuario.FkCat_TipoUsuario = 2
-                ORDER BY ruta.NumeroRuta DESC";
+                ORDER BY ruta.NumeroRuta DESC
+                LIMIT $limit
+                OFFSET $offset";
 
     try {
 
@@ -153,7 +217,18 @@ $app->get('/api/rutaCobrador/todos/', function (Request $request, Response $resp
         $resultado = $ejecutar->fetchAll(PDO::FETCH_OBJ);
         $db = null;
 
-        echo json_encode($resultado);
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar1 = $db -> query($count);
+        $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+      //Exportar y mostrar JSON
+        if($resultado) {
+        return $response->withStatus(200)
+        ->withHeader('Content-Type', 'application/json')
+        ->write(json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
 
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '}';
