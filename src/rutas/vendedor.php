@@ -6,6 +6,163 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 // REVISAR FUNCIONAMIENTO DE RUTAS ACTUALIZADAS DE VENDEDOR.
 
+<<<<<<< HEAD
+=======
+$app -> get('/api/vendedores/', function(Request $request, Response $response){
+$mCustomHelper = new MyCustomHelper();
+
+  $idUsuario = $request->getParam('idUser');
+  $page = $request->getParam('page');
+  $limit = $request->getParam('pageSize');
+  $likeSearch = $request->getParam('likeSearch');
+  $columnaGenerica = $request->getParam('columnaGenerica');
+  $parametroColumnaGenerica = $request->getParam('parametroGenerico');
+
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $pageForReturn = $pageReal;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $consultaGenerica = "SELECT
+                    *
+                    FROM
+                    usuario
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
+                    AND FkCat_TipoUsuario = 3
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $totalConsultaGenerica = "SELECT
+                    COUNT (usuario.IdUsuario) as Total
+                    FROM
+                    usuario
+                    WHERE FkCat_TipoUsuario = 3";
+  
+  $consultaTodos = "SELECT
+                    usuario.Nombre, cat_tipousuario.TipoUsuario
+                    FROM
+                    usuario 
+                    INNER JOIN cat_tipousuario ON cat_tipousuario.IdTipoUsuario = usuario.FkCat_TipoUsuario 
+                    WHERE usuario.FkCat_TipoUsuario = 3
+                    LIMIT $limit
+                    OFFSET $offset";
+
+  $consultaLikeSearch = "SELECT
+                    usuario.Nombre, cat_tipousuario.TipoUsuario
+                    FROM
+                    usuario 
+                    INNER JOIN cat_tipousuario ON cat_tipousuario.IdTipoUsuario = usuario.FkCat_TipoUsuario 
+                    WHERE usuario.FkCat_TipoUsuario = 3
+                        WHERE Nombre LIKE '%$likeSearch%'
+                        LIMIT $limit
+                        OFFSET $offset";
+
+$totalConsultaTodos = "SELECT
+                    COUNT(usuario.IdUsuario) as Total
+                    FROM
+                    usuario 
+                    INNER JOIN cat_tipousuario ON cat_tipousuario.IdTipoUsuario = usuario.FkCat_TipoUsuario 
+                    WHERE usuario.FkCat_TipoUsuario = 3";
+                    
+$totalConsultaLikeSearch = "SELECT
+                    COUNT(usuario.IdUsuario) as Total
+                    FROM
+                    usuario 
+                    INNER JOIN cat_tipousuario ON cat_tipousuario.IdTipoUsuario = usuario.FkCat_TipoUsuario 
+                    WHERE usuario.FkCat_TipoUsuario = 3
+                    WHERE Nombre LIKE '%$likeSearch%'";  
+
+  try {
+      if($columnaGenerica != null){
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($consultaGenerica);
+          $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($totalConsultaGenerica);
+          $mTotal = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $mTotal = json_decode( json_encode($total[0]) , true );
+          
+          $mCustomResponse = new CustomResponse(200,  $vendedores, null, (int)$pageForReturn, (int)$mTotal['Total'] );
+          
+          return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        
+    } else if($likeSearch != null){
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consultaLikeSearch);
+      $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($totalConsultaLikeSearch);
+      $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $mTotal = json_decode( json_encode($total[0]) , true );
+      
+      $mCustomResponse = new CustomResponse(200,  $vendedores, null, (int)$pageForReturn, (int)$mTotal['Total']);
+
+      return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+                
+    } else if ($likeSearch == null) {
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($consultaTodos);
+        $vendedores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($totalConsultaTodos);
+        $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+      
+        $mTotal = json_decode( json_encode($total[0]) , true );
+
+        $mCustomResponse = new CustomResponse(200,  $vendedores, null, (int)$pageForReturn, (int)$mTotal['Total']);
+        
+        return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        
+    } else {
+      $mErrorResponse = new ErrorResponse(200, 'Hubo un problema con la solicitud. Intentelo de nuevo.', false);
+      return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+
+    }
+
+  } catch (PDOException $e) {
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+  }
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+>>>>>>> Actualizacion de API 13-marzo-2020
 //obetener todos los vendedores
 $app -> get('/api/vendedores/', function(Request $request, Response $response){
     
@@ -56,10 +213,12 @@ $app -> get('/api/vendedores/', function(Request $request, Response $response){
         }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse )
   }
 
 });
+*/
 
 //obetener un vendedor por id
 $app -> get('/api/vendedores/IdUsuario/', function(Request $request, Response $response){
@@ -99,7 +258,8 @@ $app -> get('/api/vendedores/IdUsuario/', function(Request $request, Response $r
       
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 });
@@ -142,7 +302,8 @@ $app -> get('/api/vendedores/nombre/', function(Request $request, Response $resp
         }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 });
@@ -180,7 +341,8 @@ $app -> put('/api/vendedores/actualizar/{IdUsuario}', function(Request $request,
         }
 
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 
@@ -208,7 +370,8 @@ $id = $request -> getAttribute('IdUsuario');
         ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
         }
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 

@@ -5,7 +5,253 @@ use Psr\Http\Message\ResponseInterface as Response;
 //$app = new \Slim\App;
 
 //INCOMPLETO. Estructura de utra ruta (para guiarse).
+$app -> get('/api/ventas/', function(Request $request, Response $response){
+  $mCustomHelper = new MyCustomHelper();
 
+  $idUsuario = $request->getParam('idUser');
+  $page = $request->getParam('page');
+  $limit = $request->getParam('pageSize');
+  $likeSearch = $request->getParam('likeSearch');
+  $columnaGenerica = $request->getParam('columnaGenerica');
+  $parametroColumnaGenerica = $request->getParam('parametroGenerico');
+
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $pageForReturn = $pageReal;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $consultaGenerica = "SELECT
+                    venta.IdVenta,
+                    venta.TotalVenta,
+                    venta.Enganche,
+                    venta.Fecha,
+                    venta.PeriodoPago,
+                    venta.CantidadAbono,
+                    venta.SaldoPendiente,
+                    venta.HorarioCobro,
+                    venta.TipoVenta,
+                    venta.GpsLat,
+                    venta.GpsLon,
+                    cuenta.NumeroCuenta,
+                    usuario.Nombre,
+                    cliente.Nombre,
+                    cliente.APaterno,
+                    cliente.AMaterno
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $totalConsultaGenerica = "SELECT
+                    COUNT (venta.IdVenta) as Total
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica'";
+  
+  $consultaTodos = "SELECT
+                    venta.IdVenta,
+                    venta.TotalVenta,
+                    venta.Enganche,
+                    venta.Fecha,
+                    venta.PeriodoPago,
+                    venta.CantidadAbono,
+                    venta.SaldoPendiente,
+                    venta.HorarioCobro,
+                    venta.TipoVenta,
+                    venta.GpsLat,
+                    venta.GpsLon,
+                    cuenta.NumeroCuenta,
+                    usuario.Nombre,
+                    cliente.Nombre,
+                    cliente.APaterno,
+                    cliente.AMaterno
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente
+                    LIMIT $limit
+                    OFFSET $offset";
+
+  $consultaLikeSearch = "SELECT
+                    venta.IdVenta,
+                    venta.TotalVenta,
+                    venta.Enganche,
+                    venta.Fecha,
+                    venta.PeriodoPago,
+                    venta.CantidadAbono,
+                    venta.SaldoPendiente,
+                    venta.HorarioCobro,
+                    venta.TipoVenta,
+                    venta.GpsLat,
+                    venta.GpsLon,
+                    cuenta.NumeroCuenta,
+                    usuario.Nombre,
+                    cliente.Nombre,
+                    cliente.APaterno,
+                    cliente.AMaterno
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente
+                    WHERE venta.Fecha LIKE '%$likeSearch%' OR
+                    venta.PeriodoPago LIKE '%$likeSearch%' OR
+                    venta.CantidadAbono LIKE '%$likeSearch%' OR
+                    venta.HorarioCobro LIKE '%$likeSearch%' OR
+                    venta.TipoVenta LIKE '%$likeSearch%' OR
+                    venta.GpsLat LIKE '%$likeSearch%' OR
+                    venta.GpsLon LIKE '%$likeSearch%' OR
+                    cuenta.NumeroCuenta LIKE '%$likeSearch%' OR
+                    usuario.Nombre LIKE '%$likeSearch%' OR
+                    cliente.Nombre LIKE '%$likeSearch%' OR
+                    cliente.APaterno LIKE '%$likeSearch%' OR
+                    cliente.AMaterno LIKE '%$likeSearch%'
+                        LIMIT $limit
+                        OFFSET $offset";
+
+$totalConsultaTodos = "SELECT
+                    COUNT(venta.IdVenta) as Total
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente";
+                    
+$totalConsultaLikeSearch = "SELECT
+                    venta.IdVenta,
+                    venta.TotalVenta,
+                    venta.Enganche,
+                    venta.Fecha,
+                    venta.PeriodoPago,
+                    venta.CantidadAbono,
+                    venta.SaldoPendiente,
+                    venta.HorarioCobro,
+                    venta.TipoVenta,
+                    venta.GpsLat,
+                    venta.GpsLon,
+                    cuenta.NumeroCuenta,
+                    usuario.Nombre,
+                    cliente.Nombre,
+                    cliente.APaterno,
+                    cliente.AMaterno
+                    FROM
+                    venta
+                    INNER JOIN cuenta ON venta.FkCuenta = cuenta.IdCuenta
+                    INNER JOIN usuario ON venta.FkVendedor = usuario.IdUsuario
+                    INNER JOIN cliente ON cuenta.FkCliente = cliente.IdCliente
+                    WHERE venta.Fecha LIKE '%$likeSearch%' OR
+                    venta.PeriodoPago LIKE '%$likeSearch%' OR
+                    venta.CantidadAbono LIKE '%$likeSearch%' OR
+                    venta.HorarioCobro LIKE '%$likeSearch%' OR
+                    venta.TipoVenta LIKE '%$likeSearch%' OR
+                    venta.GpsLat LIKE '%$likeSearch%' OR
+                    venta.GpsLon LIKE '%$likeSearch%' OR
+                    cuenta.NumeroCuenta LIKE '%$likeSearch%' OR
+                    usuario.Nombre LIKE '%$likeSearch%' OR
+                    cliente.Nombre LIKE '%$likeSearch%' OR
+                    cliente.APaterno LIKE '%$likeSearch%' OR
+                    cliente.AMaterno LIKE '%$likeSearch%'";  
+
+  try {
+      if($columnaGenerica != null){
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($consultaGenerica);
+          $ventas = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($totalConsultaGenerica);
+          $mTotal = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $mTotal = json_decode( json_encode($total[0]) , true );
+          
+          if ($ventas) { 
+          $mCustomResponse = new CustomResponse(200,  $ventas, null, (int)$pageForReturn, (int)$mTotal['Total'] );
+          return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+          }
+    } else if($likeSearch != null){
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consultaLikeSearch);
+      $ventas = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($totalConsultaLikeSearch);
+      $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $mTotal = json_decode( json_encode($total[0]) , true );
+
+      if ($ventas) {       
+      $mCustomResponse = new CustomResponse(200,  $ventas, null, (int)$pageForReturn, (int)$mTotal['Total']);
+      return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+      }        
+    } else if ($likeSearch == null) {
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($consultaTodos);
+        $ventas = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($totalConsultaTodos);
+        $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+      
+        $mTotal = json_decode( json_encode($total[0]) , true );
+        
+        if ($ventas) { 
+        $mCustomResponse = new CustomResponse(200,  $ventas, null, (int)$pageForReturn, (int)$mTotal['Total']);
+        return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        }
+    } else {
+      $mErrorResponse = new ErrorResponse(200, 'Hubo un problema con la solicitud. Intentelo de nuevo.', false);
+      return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+
+    }
+
+  } catch (PDOException $e) {
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+  }
+});
+
+
+
+
+
+
+
+
+<<<<<<< HEAD
+=======
+
+
+
+
+
+/*
+>>>>>>> Actualizacion de API 13-marzo-2020
 //obetener todos los ventas
 $app -> get('/api/ventas/', function(Request $request, Response $response){
     
@@ -65,7 +311,6 @@ $app -> get('/api/ventas/', function(Request $request, Response $response){
   }
 });
 
-
 //obetener una venta por id
 $app -> get('/api/ventas/IdVenta/', function(Request $request, Response $response){
 
@@ -110,11 +355,13 @@ $app -> get('/api/ventas/IdVenta/', function(Request $request, Response $respons
   }
 
 });
-
+*/
 
 //agregar venta
 $app->post('/api/ventas/agregar', function (Request $request, Response $response) {
-
+    
+    $mCustomHelper = new MyCustomHelper();
+    
     $fkCuenta = $request->getParam('FkCuenta');
     $totalVenta = $request->getParam('TotalVenta');
     $enganche = $request->getParam('Enganche');
@@ -158,6 +405,7 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
         $stmt->bindParam(':EstatusAprobacion', $estatusAprobacion);
 
         $stmt->execute();
+<<<<<<< HEAD
 
       if($stmt) {
         return $response->withStatus(200)
@@ -168,6 +416,17 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
     } catch (PDOException $e) {
         echo '{"error": {"text": ' . $e->getMessage() . '} }';
     }
+=======
+        
+        if ($stmt) { 
+        $mCustomResponse = new CustomResponse(200,'Se agregó venta con éxito.', null, null, null );
+        return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+        }
+        } catch (PDOException $e) {
+        $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+        return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+        }
+>>>>>>> Actualizacion de API 13-marzo-2020
 
 });
 
@@ -175,7 +434,9 @@ $app->post('/api/ventas/agregar', function (Request $request, Response $response
 
 //Actualizar ventas
 $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Response $response){
-
+    
+    $mCustomHelper = new MyCustomHelper();
+    
     $idVenta = $request -> getAttribute('IdVenta');
     $fkCuenta = $request->getParam('FkCuenta');
     $totalVenta = $request->getParam('TotalVenta');
@@ -228,6 +489,7 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
     $stmt->bindParam(':EstatusAprobacion', $estatusAprobacion);
 
     $stmt -> execute();
+<<<<<<< HEAD
 
     if($stmt) {
         return $response->withStatus(201)
@@ -238,12 +500,24 @@ $app -> put('/api/ventas/actualizar/{IdVenta}', function(Request $request, Respo
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'} }';
   }
+=======
+    if ($stmt) { 
+    $mCustomResponse = new CustomResponse(201,'Se actualizó venta con éxito.', null, null, null );
+    return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+    }
+    } catch (PDOException $e) {
+        $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+        return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+    }
+>>>>>>> Actualizacion de API 13-marzo-2020
 
 });
 
 //Eliminar ventas
 $app -> delete('/api/ventas/eliminar/{IdVenta}', function(Request $request, Response $response){
-
+    
+  $mCustomHelper = new MyCustomHelper();
+      
   $idVenta = $request -> getAttribute('IdVenta');
   
     $consulta = "DELETE FROM venta WHERE IdVenta = '$idVenta';";
@@ -257,6 +531,7 @@ $app -> delete('/api/ventas/eliminar/{IdVenta}', function(Request $request, Resp
         $stmt -> execute();
         $db = null;
         
+<<<<<<< HEAD
     if($stmt) {
         return $response->withStatus(200)
             ->withHeader('Content-Type', 'application/json')
@@ -264,6 +539,15 @@ $app -> delete('/api/ventas/eliminar/{IdVenta}', function(Request $request, Resp
       }
     } catch (PDOException $e) {
       echo '{"error": {"text": '.$e -> getMessage().'} }';
+=======
+        if ($stmt) { 
+            $mCustomResponse = new CustomResponse(200,'Se eliminó venta con éxito.', null, null, null );
+            return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+        }
+    } catch (PDOException $e) {
+        $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+        return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+>>>>>>> Actualizacion de API 13-marzo-2020
     }
   
   

@@ -2,8 +2,173 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
+$app -> get('/api/usuarios/', function(Request $request, Response $response){
+$mCustomHelper = new MyCustomHelper();
+
+  $idUsuario = $request->getParam('idUser');
+  $page = $request->getParam('page');
+  $limit = $request->getParam('pageSize');
+  $likeSearch = $request->getParam('likeSearch');
+  $columnaGenerica = $request->getParam('columnaGenerica');
+  $parametroColumnaGenerica = $request->getParam('parametroGenerico');
+
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $pageForReturn = $pageReal;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+  
+  $consultaGenerica = "SELECT
+                    usuario.Nombre,
+                    cat_tipousuario.TipoUsuario,
+                    cat_estatus_usuarios.Estatus,
+                    cat_estatus_usuarios.Descripcion,
+                    usuario.IdUsuario
+                    FROM
+                    usuario
+                    INNER JOIN cat_estatus_usuarios ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+                    INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $totalConsultaGenerica = "SELECT
+                    usuario.Nombre,
+                    cat_tipousuario.TipoUsuario,
+                    cat_estatus_usuarios.Estatus,
+                    cat_estatus_usuarios.Descripcion,
+                    usuario.IdUsuario
+                    FROM
+                    usuario
+                    INNER JOIN cat_estatus_usuarios ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+                    INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+                    LIMIT $limit
+                    OFFSET $offset";
+  
+  $consultaTodos = "SELECT
+                    usuario.Nombre,
+                    cat_tipousuario.TipoUsuario,
+                    cat_estatus_usuarios.Estatus,
+                    cat_estatus_usuarios.Descripcion,
+                    usuario.IdUsuario
+                    FROM
+                    usuario
+                    INNER JOIN cat_estatus_usuarios ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+                    INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+                    LIMIT $limit
+                    OFFSET $offset";
+
+  $consultaLikeSearch = "SELECT
+                    usuario.Nombre,
+                    cat_tipousuario.TipoUsuario,
+                    cat_estatus_usuarios.Estatus,
+                    cat_estatus_usuarios.Descripcion,
+                    usuario.IdUsuario
+                    FROM
+                    usuario
+                    INNER JOIN cat_estatus_usuarios ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+                    INNER JOIN cat_tipousuario ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+                        WHERE Nombre LIKE '%$likeSearch%'
+                        LIMIT $limit
+                        OFFSET $offset";
+
+$totalConsultaTodos = "SELECT
+                    COUNT(usuario.IdUsuario) as Total
+                    FROM
+                    usuario";
+                    
+$totalConsultaLikeSearch = "SELECT
+                    COUNT(usuario.IdUsuario) as Total
+                    FROM
+                    usuario 
+                    WHERE Nombre LIKE '%$likeSearch%'";  
+
+  try {
+      if($columnaGenerica != null){
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($consultaGenerica);
+          $usuarios = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $db = new db();
+          $db = $db -> conectar();
+          $ejecutar = $db -> query($totalConsultaGenerica);
+          $mTotal = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+          $db = null;
+          
+          $mTotal = json_decode( json_encode($total[0]) , true );
+          
+          $mCustomResponse = new CustomResponse(200,  $usuarios, null, (int)$pageForReturn, (int)$mTotal['Total'] );
+          
+          return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        
+    } else if($likeSearch != null){
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consultaLikeSearch);
+      $usuarios = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($totalConsultaLikeSearch);
+      $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+      
+      $mTotal = json_decode( json_encode($total[0]) , true );
+      
+      $mCustomResponse = new CustomResponse(200,  $usuarios, null, (int)$pageForReturn, (int)$mTotal['Total']);
+
+      return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+                
+    } else if ($likeSearch == null) {
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($consultaTodos);
+        $usuarios = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        
+        $db = new db();
+        $db = $db -> conectar();
+        $ejecutar = $db -> query($totalConsultaTodos);
+        $total = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+      
+        $mTotal = json_decode( json_encode($total[0]) , true );
+
+        $mCustomResponse = new CustomResponse(200,  $usuarios, null, (int)$pageForReturn, (int)$mTotal['Total']);
+        
+        return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        
+    } else {
+      $mErrorResponse = new ErrorResponse(200, 'Hubo un problema con la solicitud. Intentelo de nuevo.', false);
+      return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+
+    }
+
+  } catch (PDOException $e) {
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
+  }
+
+});
 
 
+
+
+
+
+
+
+
+
+/*
 //obetener usuarios
 $app -> get('/api/usuario/', function(Request $request, Response $response){
   
@@ -42,6 +207,7 @@ INNER JOIN cat_tipousuario on usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipo
 
 
 });
+*/
 
 //obetener usuario en especifico
 $app -> get('/api/usuario/nombre/', function(Request $request, Response $response){
@@ -155,7 +321,6 @@ $app -> put('/api/usuario/actualizar/{IdUsuario}', function(Request $request, Re
 
 });
 
-
 //Eliminar usuarios
 $app -> delete('/api/usuario/eliminar/{IdUsuario}', function(Request $request, Response $response){
 
@@ -180,12 +345,5 @@ $id = $request -> getAttribute('IdUsuario');
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
-
-
 });
-
-
-
-
-
 ?>

@@ -10,7 +10,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 * columnaGenerica - Columna para hacer busqueda generica, requiere columna como esta en la tabla de la DB.
 * parametroGenerico - Condicion de busqueda generica
 */
+<<<<<<< HEAD
 $app -> get('/api/clientes', function(Request $request, Response $response){
+=======
+/*Ruta general de GET glientes*/
+$app -> get('/api/clientes', function(Request $request, Response $response){
+  
+>>>>>>> Actualizacion de API 13-marzo-2020
   $mCustomHelper = new MyCustomHelper();
 
   $idUsuario = $request->getParam('idUser');
@@ -34,12 +40,19 @@ $app -> get('/api/clientes', function(Request $request, Response $response){
                     OFFSET $offset";
   
   $totalConsultaGenerica = "SELECT
+<<<<<<< HEAD
                     *
                     FROM
                     cliente
                     WHERE ".$columnaGenerica." = '$parametroColumnaGenerica' 
                     LIMIT $limit
                     OFFSET $offset";
+=======
+                    (cliente.IdCliente)
+                    FROM
+                    cliente
+                    WHERE ".$columnaGenerica." = '$parametroColumnaGenerica'";
+>>>>>>> Actualizacion de API 13-marzo-2020
   
   $consultaTodos = "SELECT
                     cliente.IdCliente,
@@ -136,6 +149,10 @@ $totalConsultaLikeSearch = "SELECT
                               AMaterno LIKE '%$likeSearch%' ";  
 
   try {
+<<<<<<< HEAD
+=======
+      /* Si la tura trae algun parametro para busqueda generica, se utiliza la consulta generica. Si no, se va al ELSE IF */
+>>>>>>> Actualizacion de API 13-marzo-2020
       if($columnaGenerica != null){
           $db = new db();
           $db = $db -> conectar();
@@ -150,11 +167,22 @@ $totalConsultaLikeSearch = "SELECT
           $db = null;
           
           $mTotal = json_decode( json_encode($total[0]) , true );
+<<<<<<< HEAD
           
           $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total'] );
           return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
       
     } else if($likeSearch != null){
+=======
+          if ($clientes) {
+          $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total'] );
+          return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+          }
+    } else if($likeSearch != null){
+      /* Si la ruta NO contiene CONSULTA GENERICA y tampoco lleva parametro para la busqueda con LIKE */    
+>>>>>>> Actualizacion de API 13-marzo-2020
       $db = new db();
       $db = $db -> conectar();
       $ejecutar = $db -> query($consultaLikeSearch);
@@ -169,10 +197,21 @@ $totalConsultaLikeSearch = "SELECT
       
       $mTotal = json_decode( json_encode($total[0]) , true );
       
+<<<<<<< HEAD
       $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
       return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
       
     } else if ($likeSearch == null) {
+=======
+      if ($clientes) {
+      $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
+      return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+      }        
+    } else if ($likeSearch == null) {
+        /* Si la ruta NO contiene CONSULTA GENERICA, NI parametro de busqueda LIKE, se toma la busqueda SIN parametros y se regresa GET ALL */
+>>>>>>> Actualizacion de API 13-marzo-2020
         $db = new db();
         $db = $db -> conectar();
         $ejecutar = $db -> query($consultaTodos);
@@ -187,16 +226,33 @@ $totalConsultaLikeSearch = "SELECT
       
         $mTotal = json_decode( json_encode($total[0]) , true );
 
+<<<<<<< HEAD
         $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
         return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
 
     } else {
+=======
+        if ($clientes) {
+        $mCustomResponse = new CustomResponse(200,  $clientes, null, (int)$pageForReturn, (int)$mTotal['Total']);
+        return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write( $mCustomHelper -> returnCatchAsJson($mCustomResponse ) );
+        }
+    } else {
+      /* Si ningun CASO de los anteriores se cumple, entra al ELSE de errorResponse.
+         Si bien no es un ERROR como tal, es una respuesta que nos dice que no se cumplieron los
+         criterios anteriores.*/    
+>>>>>>> Actualizacion de API 13-marzo-2020
       $mErrorResponse = new ErrorResponse(200, 'Hubo un problema con la solicitud. Intentelo de nuevo.', false);
       return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
 
     }
 
   } catch (PDOException $e) {
+<<<<<<< HEAD
+=======
+    /* Si algo sale mal en cualquier caso de los anteriores del TRY, se lanza este catch. */  
+>>>>>>> Actualizacion de API 13-marzo-2020
     $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
     return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
@@ -212,6 +268,12 @@ $totalConsultaLikeSearch = "SELECT
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> Actualizacion de API 13-marzo-2020
 
 
 
@@ -222,9 +284,12 @@ $totalConsultaLikeSearch = "SELECT
 
 
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> Actualizacion de API 13-marzo-2020
 /*
 //obetener todoscliente
 $app -> get('/api/clientes', function(Request $request, Response $response){
@@ -440,30 +505,32 @@ FROM
 */
 //agregar Cliente
 $app -> post('/api/clientes/agregar', function(Request $request, Response $response){
+    $mCustomHelper = new MyCustomHelper();
+    
+    $nombre = $request -> getParam('Nombre');
+    $aPaterno = $request -> getParam('APaterno');
+    $aMaterno = $request -> getParam('AMaterno');
+    $fechaNacimiento = $request -> getParam('FechaNacimiento');
+    $sexo = $request -> getParam('Sexo');
+    $telefono = $request -> getParam('Telefono');
+    $celular = $request -> getParam('Celular');
+    $casaPropia = $request -> getParam('CasaPropia');
+    $autoPropio = $request -> getParam('AutoPropio');
+    $lugarTrabajo = $request -> getParam('LugarTrabajo');
+    $telTrabajo = $request -> getParam('TelTrabajo');
+    $antiguedad = $request -> getParam('Antiguedad');
+    $fkDireccion = $request -> getParam('FkDireccion');
+    $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
+    $estatus = $request -> getParam('Estatus');
+    
+    
+    $consulta = "INSERT INTO cliente(Nombre, APaterno, AMaterno, FechaNacimiento,
+    Sexo, Telefono, Celular, CasaPropia, AutoPropio, LugarTrabajo, TelTrabajo, Antiguedad,
+    FkDireccion, FkDireccionCobro, Estatus)
+    values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
+    :Sexo, :Telefono, :Celular, :CasaPropia, :AutoPropio, :LugarTrabajo, :TelTrabajo, :Antiguedad,
+    :FkDireccion, :FkDireccionCobro, :Estatus)";
 
-$nombre = $request -> getParam('Nombre');
-$aPaterno = $request -> getParam('APaterno');
-$aMaterno = $request -> getParam('AMaterno');
-$fechaNacimiento = $request -> getParam('FechaNacimiento');
-$sexo = $request -> getParam('Sexo');
-$telefono = $request -> getParam('Telefono');
-$celular = $request -> getParam('Celular');
-$casaPropia = $request -> getParam('CasaPropia');
-$autoPropio = $request -> getParam('AutoPropio');
-$lugarTrabajo = $request -> getParam('LugarTrabajo');
-$telTrabajo = $request -> getParam('TelTrabajo');
-$antiguedad = $request -> getParam('Antiguedad');
-$fkDireccion = $request -> getParam('FkDireccion');
-$fkDireccionCobro = $request -> getParam('FkDireccionCobro');
-$estatus = $request -> getParam('Estatus');
-
-
-$consulta = "INSERT INTO cliente(Nombre, APaterno, AMaterno, FechaNacimiento,
-Sexo, Telefono, Celular, CasaPropia, AutoPropio, LugarTrabajo, TelTrabajo, Antiguedad,
-FkDireccion, FkDireccionCobro, Estatus)
-values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
-:Sexo, :Telefono, :Celular, :CasaPropia, :AutoPropio, :LugarTrabajo, :TelTrabajo, :Antiguedad,
-:FkDireccion, :FkDireccionCobro, :Estatus)";
 
   try {
 
@@ -487,9 +554,11 @@ values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
       $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
       $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Cliente agregado"}';
-      //Exportar y mostrar JSON
-
+       
+      if ($stmt) { 
+      $mCustomResponse = new CustomResponse(200,  null, null, null, null );
+      return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+      }
   } catch (PDOException $e) {
     $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
     return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
@@ -501,7 +570,8 @@ values (:Nombre, :APaterno, :AMaterno, :FechaNacimiento,
 
 //Actualizar cliente
 $app -> put('/api/clientes/actualizar/{IdCliente}', function(Request $request, Response $response){
-
+  $mCustomHelper = new MyCustomHelper();
+  
   $id = $request -> getAttribute('IdCliente');
   $nombre = $request -> getParam('Nombre');
   $aPaterno = $request -> getParam('APaterno');
@@ -518,8 +588,6 @@ $app -> put('/api/clientes/actualizar/{IdCliente}', function(Request $request, R
   $fkDireccion = $request -> getParam('FkDireccion');
   $fkDireccionCobro = $request -> getParam('FkDireccionCobro');
   $estatus = $request -> getParam('Estatus');
-
-
 
   $consulta = "UPDATE  Cliente SET
       Nombre =                       :Nombre,
@@ -562,11 +630,14 @@ $app -> put('/api/clientes/actualizar/{IdCliente}', function(Request $request, R
       $stmt -> bindParam(':FkDireccionCobro', $fkDireccionCobro);
       $stmt -> bindParam(':Estatus', $estatus);
       $stmt -> execute();
-      echo '{"notice": {"text": "Cliente actualizado"}';
-      //Exportar y mostrar JSON
-
+      
+      if ($stmt) { 
+      $mCustomResponse = new CustomResponse(201,  null, null, null, null );
+      return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+      }
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 
@@ -574,8 +645,9 @@ $app -> put('/api/clientes/actualizar/{IdCliente}', function(Request $request, R
 
 //Eliminar cliente
 $app -> delete('/api/clientes/eliminar/{IdCliente}', function(Request $request, Response $response){
-
-$id = $request -> getAttribute('IdCliente');
+  $mCustomHelper = new MyCustomHelper();
+  
+  $id = $request -> getAttribute('IdCliente');
 
   $consulta = "DELETE FROM Cliente WHERE IdCliente = '$id';";
 
@@ -587,9 +659,13 @@ $id = $request -> getAttribute('IdCliente');
       $stmt = $db -> query($consulta);
       $stmt -> execute();
       $db = null;
-      echo '{"notice": {"text": "Cliente borrado"}';
+      if ($stmt) { 
+      $mCustomResponse = new CustomResponse(200,  null, null, null, null );
+      return $mCustomHelper -> returnCatchAsJson($mCustomResponse );
+      }
   } catch (PDOException $e) {
-    echo '{"error": {"text": '.$e -> getMessage().'}';
+    $mErrorResponse = new ErrorResponse(500, $e -> getMessage(), true);
+    return $mCustomHelper -> returnCatchAsJson($mErrorResponse );
   }
 
 
