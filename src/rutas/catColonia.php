@@ -5,6 +5,16 @@ use Psr\Http\Message\ResponseInterface as Response;
 //Obtener Las Colonias
 $app -> get('/api/catColonia', function(Request $request, Response $response){
 
+
+  $limit = $request -> getParam('limit');
+  $page = $request -> getParam('page');
+  
+  $pageReal = (isset( $page ) && $page > 0) ? $page : 1;
+  $limit = isset( $limit ) ? $limit : 10;
+  $offset = (--$pageReal) * $limit;
+
+  $count = "SELECT COUNT(*) as Total FROM cat_colonia";
+
      $consulta = "select * from cat_colonia";
   
      try {
@@ -16,8 +26,17 @@ $app -> get('/api/catColonia', function(Request $request, Response $response){
             $catColonia = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
             $db = null;
   
-            //Exportar y mostrar JSON
-            echo json_encode($catColonia);
+            $db = new db();
+            $db = $db->conectar();
+            $ejecutar1 = $db -> query($count);
+            $stmt2 = $ejecutar1 -> fetchAll(PDO::FETCH_OBJ);
+            $db = null;
+   
+            if($catColonia) {
+              return $response->withStatus(200)
+                  ->withHeader('Content-Type', 'application/json')
+                  ->write(json_encode($catColonia, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            }
   
         } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -26,9 +45,9 @@ $app -> get('/api/catColonia', function(Request $request, Response $response){
 });
 
 //Obtener Colonia en especifico
-$app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response $response){
+$app -> get('/api/catColonia/', function(Request $request, Response $response){
 
-    $NombreColonia = $request -> getAttribute('NomColonia');
+    $NombreColonia = $request -> getParam('NomColonia');
     
       $consulta = "select * from cat_colonia WHERE NomColonia LIKE '%$NombreColonia%';";
     
@@ -41,8 +60,11 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
           $catColonia = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
           $db = null;
     
-          //Exportar y mostrar JSON
-          echo json_encode($catColonia);
+          if($catColonia) {
+            return $response->withStatus(200)
+                ->withHeader('Content-Type', 'application/json')
+                ->write(json_encode($catColonia, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+          }
     
       } catch (PDOException $e) {
         echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -69,8 +91,12 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
               $stmt -> bindParam(':NomColonia', $NombreColonia);
               $stmt -> bindParam(':CP', $CP);
               $stmt -> execute();
-              echo '{"notice": {"text": "Colonia agregada"}';
-              //Exportar y mostrar JSON
+
+              if($stmt) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
         
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -80,9 +106,9 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
         });
 
          //Actualizar Colonia
-    $app -> put('/api/catColonia/actualizar/{IdColonia}', function(Request $request, Response $response){
+    $app -> put('/api/catColonia/actualizar/', function(Request $request, Response $response){
 
-        $id = $request -> getAttribute('IdColonia');
+        $id = $request -> getParam('IdColonia');
         $NombreColonia = $request -> getParam('NomColonia');
         $CP = $request -> getParam('CP');
       
@@ -101,8 +127,12 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
             $stmt -> bindParam(':NomColonia', $NombreColonia);
             $stmt -> bindParam(':CP', $CP);
             $stmt -> execute();
-            echo '{"notice": {"text": "Colonia actualizada"}';
-            //Exportar y mostrar JSON
+            
+            if($stmt) {
+              return $response->withStatus(201)
+                  ->withHeader('Content-Type', 'application/json')
+                  ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            }
       
         } catch (PDOException $e) {
           echo '{"error": {"text": '.$e -> getMessage().'}';
@@ -111,9 +141,9 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
       });
 
       //Eliminar Colonia
-    $app -> delete('/api/catColonia/eliminar/{IdColonia}', function(Request $request, Response $response){
+    $app -> delete('/api/catColonia/eliminar/', function(Request $request, Response $response){
 
-        $id = $request -> getAttribute('IdColonia');
+        $id = $request -> getParam('IdColonia');
         
           $consulta = "DELETE FROM cat_colonia WHERE IdColonia = $id";
         
@@ -125,7 +155,13 @@ $app -> get('/api/catColonia/{NomColonia}', function(Request $request, Response 
               $stmt = $db -> query($consulta);
               $stmt -> execute();
               $db = null;
-              echo '{"notice": {"text": "Colonia borrada"}';
+
+              if($stmt) {
+                return $response->withStatus(200)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($stmt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+              }
+
           } catch (PDOException $e) {
             echo '{"error": {"text": '.$e -> getMessage().'}';
           }

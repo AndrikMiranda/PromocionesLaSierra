@@ -1,9 +1,9 @@
 <?php
   class db{
-      private $host = 'localhost';
-      private $usuario = 'root';
-      private $password = '';
-      private $db = 'lasierra';
+      private $host = 'mysql-jherrera.alwaysdata.net';
+      private $usuario = 'jherrera';
+      private $password = 'Arthamis07';
+      private $db = 'jherrera_lasierra';
 
 
       public function conectar() {

@@ -4,20 +4,25 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 //$app = new \Slim\App;
 
-//INCOMPLETO. Estructura de otra ruta (para guiarse).
+// REVISAR FUNCIONAMIENTO DE RUTAS ACTUALIZADAS DE COBRADOR.
 
 //obetener todos los cobradores
 $app -> get('/api/cobradores', function(Request $request, Response $response){
 
   $consulta = "SELECT
-  `cobrador`.`IdCobrador`,
-  `cobrador`.`NombreCobrador`,
-  `cobrador`.`APaterno`,
-  `cobrador`.`AMaterno`,
-  `cobrador`.`Estatus`,
-  `cobrador`.`FkRuta`
-FROM
-  `cobrador`";
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+  WHERE
+  usuario.FkCat_TipoUsuario = 2";
 
   try {
 
@@ -37,58 +42,97 @@ FROM
 
 });
 
-//agregar cobradores
-$app -> post('/api/cobradores/agregar', function(Request $request, Response $response){
 
-$nombre = $request -> getParam('NombreCobrador');
-$aPaterno = $request -> getParam('APaterno');
-$aMaterno = $request -> getParam('AMaterno');
-$estatus = $request -> getParam('Estatus');
+//obetener un cobradores por id
+$app -> get('/api/cobradores/{IdUsuario}', function(Request $request, Response $response){
 
-
-$consulta = "INSERT INTO cobrador(NombreCobrador, APaterno, AMaterno, Estatus)
-values (:NombreCobrador, :APaterno, :AMaterno, :Estatus)";
+  $id = $request -> getAttribute('IdUsuario');
+  $consulta = "SELECT
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+  WHERE
+  cat_tipousuario.IdTipoUsuario = 2
+  AND IdUsuario = $id";
 
   try {
 
     //Instanciacion de base de datos
       $db = new db();
       $db = $db -> conectar();
-      $stmt = $db -> prepare($consulta);
-      $stmt -> bindParam(':NombreCobrador', $nombre);
-      $stmt -> bindParam(':APaterno', $aPaterno);
-      $stmt -> bindParam(':AMaterno', $aMaterno);
-      $stmt -> bindParam(':Estatus', $estatus);
-      $stmt -> execute();
-      echo '{"notice": {"text": "NombreCobrador agregado"}';
+      $ejecutar = $db -> query($consulta);
+      $cobradores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
       //Exportar y mostrar JSON
+      echo json_encode($cobradores);
 
   } catch (PDOException $e) {
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
 
+});
+
+//obtener un cobrador por nombre
+$app -> get('/api/cobradores/nombre/{Nombre}', function(Request $request, Response $response){
+
+  $nombre = $request -> getAttribute('Nombre');
+
+  $consulta = "SELECT
+  usuario.Nombre,
+  usuario.IdUsuario,
+  cat_tipousuario.TipoUsuario,
+  cat_estatus_usuarios.Estatus,
+  cat_estatus_usuarios.Descripcion
+  FROM
+  usuario
+  INNER JOIN cat_tipousuario 
+	ON usuario.FkCat_TipoUsuario = cat_tipousuario.IdTipoUsuario
+	INNER JOIN cat_estatus_usuarios 
+  ON usuario.FkCat_Estatus_Usuario = cat_estatus_usuarios.IdEstatus
+  WHERE
+  cat_tipousuario.IdTipoUsuario = 2 
+  AND usuario.Nombre LIKE '%$nombre%'";
+
+  try {
+
+    //Instanciacion de base de datos
+      $db = new db();
+      $db = $db -> conectar();
+      $ejecutar = $db -> query($consulta);
+      $cobradores = $ejecutar -> fetchAll(PDO::FETCH_OBJ);
+      $db = null;
+
+      //Exportar y mostrar JSON
+      echo json_encode($cobradores);
+
+  } catch (PDOException $e) {
+    echo '{"error": {"text": '.$e -> getMessage().'}';
+  }
 
 });
 
-
 //Actualizar cobradores
-$app -> put('/api/cobradores/actualizar/{IdCobrador}', function(Request $request, Response $response){
+$app -> put('/api/cobradores/actualizar/{IdUsuario}', function(Request $request, Response $response){
 
-  $id = $request -> getAttribute('IdCobrador');
-  $nombre = $request -> getParam('NombreCobrador');
-  $aPaterno = $request -> getParam('APaterno');
-  $aMaterno = $request -> getParam('AMaterno');
-  $estatus = $request -> getParam('Estatus');
+  $id = $request -> getAttribute('IdUsuario');
+  $nombre = $request -> getParam('Nombre');
+  $tipo = $request -> getParam('FkCat_TipoUsuario');
+  $estatus = $request -> getParam('FkCat_Estatus_Usuario');
 
-
-
-  $consulta = "UPDATE  cobrador SET
-      NombreCobrador =       :NombreCobrador,
-      APaterno =                   :APaterno,
-      AMaterno =                   :AMaterno,
-      Estatus =                      :Estatus
-
-  WHERE IdCobrador = $id";
+ $consulta = "UPDATE usuario 
+  SET Nombre = :Nombre,
+  AMateFkCat_TipoUsuario = :FkCat_TipoUsuario,
+  FkCat_Estatus_Usuario = :FkCat_Estatus_Usuario
+  WHERE IdUsuario = $id";
 
   try {
 
@@ -96,10 +140,9 @@ $app -> put('/api/cobradores/actualizar/{IdCobrador}', function(Request $request
       $db = new db();
       $db = $db -> conectar();
       $stmt = $db -> prepare($consulta);
-      $stmt -> bindParam(':NombreCobrador', $nombre);
-      $stmt -> bindParam(':APaterno', $aPaterno);
-      $stmt -> bindParam(':AMaterno', $aMaterno);
-      $stmt -> bindParam(':Estatus', $estatus);
+      $stmt -> bindParam(':Nombre', $nombre);
+      $stmt -> bindParam(':FkCat_TipoUsuario', $tipo);
+      $stmt -> bindParam(':FkCat_Estatus_Usuario', $estatus);
       $stmt -> execute();
       echo '{"notice": {"text": "Cobrador actualizado"}';
       //Exportar y mostrar JSON
@@ -112,11 +155,11 @@ $app -> put('/api/cobradores/actualizar/{IdCobrador}', function(Request $request
 });
 
 //Eliminar cobradores
-$app -> delete('/api/cobradores/eliminar/{IdCobrador}', function(Request $request, Response $response){
+$app -> delete('/api/cobradores/eliminar/{IdUsuario}', function(Request $request, Response $response){
 
-$id = $request -> getAttribute('IdCobrador');
+$id = $request -> getAttribute('IdUsuario');
 
-  $consulta = "DELETE FROM cobrador WHERE IdCobrador = '$id';";
+  $consulta = "DELETE FROM usuario WHERE IdUsuario = '$id'";
 
   try {
 
@@ -131,6 +174,39 @@ $id = $request -> getAttribute('IdCobrador');
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
 
+
+});
+
+
+//Todas las rutas con todos sus cobradores, ordenados por ruta.
+$app->get('/api/rutaCobrador/todos', function (Request $request, Response $response) {
+
+    $consulta = "SELECT
+                ruta_cobrador.fkRuta,
+                ruta.NumeroRuta,
+                ruta_cobrador.fkUsuario,
+                usuario.Nombre,
+                usuario.FkCat_Estatus_Usuario
+                FROM
+                ruta_cobrador
+                INNER JOIN ruta ON ruta_cobrador.fkRuta = ruta.IdRuta
+                INNER JOIN usuario ON ruta_cobrador.fkUsuario = usuario.IdUsuario
+                WHERE usuario.FkCat_TipoUsuario = 2
+                ORDER BY ruta.NumeroRuta DESC";
+
+    try {
+
+        $db = new db();
+        $db = $db->conectar();
+        $ejecutar = $db->query($consulta);
+        $resultado = $ejecutar->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+
+        echo json_encode($resultado);
+
+    } catch (PDOException $e) {
+        echo '{"error": {"text": ' . $e->getMessage() . '}';
+    }
 
 });
 

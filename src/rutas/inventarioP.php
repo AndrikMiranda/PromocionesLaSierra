@@ -7,12 +7,12 @@ use Psr\Http\Message\ResponseInterface as Response;
 //--------------------------------OBETENER INVENTARIO COMPLETO
 $app -> get('/api/inventarioP', function(Request $request, Response $response){
 
-  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
-  articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
+  $consulta = "SELECT inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo, 
+  articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo, 
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
-from inventarioprincipal
-INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
-INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria";
+FROM inventarioprincipal
+INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+INNER JOIN cat_categoriaarticulos ON articulo.FkCategoria = cat_categoriaarticulos.IdCategoria";
 
   try {
 
@@ -37,12 +37,12 @@ $app -> get('/api/inventarioP/categoria/{NombreCategoria}', function(Request $re
 
   $categoria = $request -> getAttribute('NombreCategoria');
 
-  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "SELECT inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
-from inventarioprincipal
-INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
-INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
+FROM inventarioprincipal
+INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+INNER JOIN cat_categoriaarticulos ON articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
 WHERE cat_categoriaarticulos.NombreCategoria LIKE '%$categoria%';";
 
   try {
@@ -69,13 +69,13 @@ $app -> get('/api/inventarioP/articulo/{NombreArticulo}', function(Request $requ
 
   $articulo = $request -> getAttribute('NombreArticulo');
 
-  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "SELECT inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
-from inventarioprincipal
-INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
-INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
-WHERE cat_categoriaarticulos.NombreCategoria LIKE '%$articulo%';";
+FROM inventarioprincipal
+INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+INNER JOIN cat_categoriaarticulos ON articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
+WHERE articulo.NombreArticulo LIKE  '%$articulo%';";
 
   try {
 
@@ -100,13 +100,13 @@ $app -> get('/api/inventarioP/codigo/{Codigo}', function(Request $request, Respo
 
   $codigo = $request -> getAttribute('Codigo');
 
-  $consulta = "select inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
+  $consulta = "SELECT inventarioprincipal.IdInventarioP, articulo.Codigo, articulo.NombreArticulo,
   articulo.Costo, articulo.PrecioVenta, articulo.PrecioMayoreo,
   cat_categoriaarticulos.NombreCategoria, inventarioprincipal.CantidadPrincipal
-from inventarioprincipal
-INNER JOIN articulo on inventarioprincipal.FkArticulo = articulo.IdArticulo
-INNER JOIN cat_categoriaarticulos on articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
-WHERE cat_categoriaarticulos.NombreCategoria LIKE '%$codigo%';";
+FROM inventarioprincipal
+INNER JOIN articulo ON inventarioprincipal.FkArticulo = articulo.IdArticulo
+INNER JOIN cat_categoriaarticulos ON articulo.FkCategoria = cat_categoriaarticulos.IdCategoria
+WHERE articulo.Codigo LIKE %$codigo%';";
 
   try {
 
@@ -163,11 +163,13 @@ if ($Art > 0) {
   $cantidad = null;
 }
 
-//Insert en el inventario
+//Sí no se encuentra ya insertado se realiza insert en inventario principal tomando la Fk
+//de un articulo previamente insertado mediante la ruta de articulos: api/articulos/agregar
+//ubicado en el archivo articulos.php
 
+//Insert en el inventario
 $consulta2 = "INSERT INTO inventarioprincipal(FkArticulo, CantidadPrincipal)
 values (:FkArticulo, :CantidadPrincipal)";
-//IdMovimientoInventario	FkInventarioP	Cantidad	Fecha	FkUsuario	FkTipoMovimiento
 
 try {
 
@@ -178,14 +180,16 @@ try {
     $stmt -> bindParam(':FkArticulo', $FkArticulo);
     $stmt -> bindParam(':CantidadPrincipal', $cantidad);
     $stmt -> execute();
-    echo '{"notice": {"text": "Producto nuevo agregado al inventario"}';
+    echo '{"notice": {"text": "Producto nuevo agregado al inventario principal"}';
 
 } catch (PDOException $e) {
   echo '{"error": {"text": '.$e -> getMessage().'}';
 }
 
+//*Consultar esta parte*
+//Sí el front puede guardar el id del insert en inventario 
 // Obtener el id del ultimo insert realizado
-$consulta3 = ("SELECT IdInventarioP FROM inventarioprincipal ORDER BY 'FkInventarioP' DESC LIMIT 1");
+$consulta3 = ("SELECT IdInventarioP FROM inventarioprincipal ORDER BY 'IdInventarioP' DESC LIMIT 1");
 
 try {
 
@@ -210,11 +214,12 @@ echo $idInv;
 // Insert en movimientoinventario
 
 $consulta4 = ("INSERT INTO movimientoinventario(FkInventarioP, Cantidad, Fecha,
-FkUsuario, FkTipoMovimiento) VALUES (:FkInventarioP, :Cantidad, :Fecha,
-:FkUsuario, :FkTipoMovimiento)");
+FkUsuario, FkTipoMovimiento) 
+VALUES (:FkInventarioP, :Cantidad, :Fecha,:FkUsuario, :FkTipoMovimiento)");
 
 $fecha = date("Y-m-d");
-$usuario = '2';
+//*Checar el usuario que esta realizando el insert*
+$usuario = '34';
 
 try {
   $db = new db();
@@ -257,13 +262,13 @@ $app -> put('/api/inventarioP/actualizarcantidad/{IdInventarioP}', function(Requ
     echo '{"error": {"text": '.$e -> getMessage().'}';
   }
 
-  $consulta2 = ("INSERT INTO movimientoinventario(FkInventarioP, Cantidad, Fecha,
-  FkUsuario, FkTipoMovimiento) VALUES (:FkInventarioP, :Cantidad, :Fecha,
-  :FkUsuario, :FkTipoMovimiento)");
+  $consulta2 = ("INSERT INTO movimientoinventario(FkInventarioP, Cantidad, Fecha, FkUsuario, FkTipoMovimiento) 
+  VALUES (:FkInventarioP, :Cantidad, :Fecha, :FkUsuario, :FkTipoMovimiento)");
 
   $inventario = $id;
   $fecha = date("Y-m-d");
-  $usuario = '2';
+  //*Checar el usuario que esta realizando el insert*
+  $usuario = '34';
 
   try {
     $db = new db();
@@ -290,8 +295,7 @@ $app -> put('/api/inventarioP/actualizarcantidadart/{FkArticulo}', function(Requ
   $cantidad = $request -> getParam('CantidadPrincipal');
   $tipoMovimiento = $request -> getParam('FkTipoMovimiento');
 
-  $consulta1 = ("SELECT IdInventarioP FROM inventarioprincipal WHERE FkArticulo = $articulo
-  LIMIT 1");
+  $consulta1 = ("SELECT IdInventarioP FROM inventarioprincipal WHERE FkArticulo = $articulo LIMIT 1");
 
   try {
     $db = new db();
@@ -310,8 +314,9 @@ $app -> put('/api/inventarioP/actualizarcantidadart/{FkArticulo}', function(Requ
   $decode=json_decode($json, true);
   $id = $decode[0]['IdInventarioP'];
 
-  $consulta2 = "UPDATE  inventarioprincipal SET CantidadPrincipal =
-  :CantidadPrincipal WHERE FkArticulo = $articulo";
+  $consulta2 = "UPDATE  inventarioprincipal 
+  SET CantidadPrincipal = :CantidadPrincipal 
+  WHERE FkArticulo = $articulo";
 
   try {
 

@@ -72,9 +72,8 @@ $app -> get('/api/direccion/{NombreDir}', function(Request $request, Response $r
         $numext = $request -> getParam('NumExt');
         $numint = $request -> getParam('NumInt');
 
-          $consulta = "INSERT INTO direccion(FkEstado,FkMunicipio,FkColonia,
-                       FkCalle,NumExterior,NumInterior)
-                       values (:FkEstado, :FkMunicipio, :FkColonia, :FkCalle, :FkCalle2, :NumExt, :NumInt)";
+          $consulta = "INSERT INTO direccion(FkEstado,FkMunicipio,FkColonia,FkCalle, FkCalle2, NumExterior,NumInterior)
+                                     values (:FkEstado, :FkMunicipio, :FkColonia, :FkCalle, :FkCalle2, :NumExt, :NumInt)";
 
           try {
 
@@ -86,6 +85,7 @@ $app -> get('/api/direccion/{NombreDir}', function(Request $request, Response $r
               $stmt -> bindParam(':FkMunicipio', $municipio);
               $stmt -> bindParam(':FkColonia', $colonia);
               $stmt -> bindParam(':FkCalle', $calle);
+              $stmt -> bindParam(':FkCalle2', $calle);
               $stmt -> bindParam(':NumExt', $numext);
               $stmt -> bindParam(':NumInt', $numint);
               $stmt -> execute();
